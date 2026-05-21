@@ -36,8 +36,9 @@ def logistic_regression_gd(
         Z = np.dot(X, w) + b
         A = sigmoid(Z)
 
-        dw = rev_n_samples * np.dot(X_T, (A - y))
-        db = rev_n_samples * np.sum(A - y)
+        errors = A - y
+        dw = rev_n_samples * np.dot(X_T, errors)
+        db = rev_n_samples * np.sum(errors)
 
         w = w - lr * dw
         b = b - lr * db
