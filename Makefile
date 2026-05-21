@@ -1,4 +1,4 @@
-.PHONY: install run debug clean fclean lint lint-strict
+.PHONY: install run debug clean fclean lint lint-strict test
 
 install:
 	mkdir -p .cache/uv_cache .cache/hf_cache
@@ -25,6 +25,9 @@ clean:
 fclean: clean
 	rm -rf .cache
 	rm -rf .venv
+
+test:
+	uv run pytest week-1/tests -v
 
 lint:
 	uv run flake8 src
