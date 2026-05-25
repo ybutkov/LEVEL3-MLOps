@@ -5,3 +5,7 @@ __pycache__/
 .mypy_cache/
 *.pyc
 *.pyo
+
+.ipynb_checkpoints/
+
+tmp/
