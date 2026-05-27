@@ -2,16 +2,15 @@ import dagster as dg
 import pandas as pd
 
 
-@dg.asset(group_name="output", io_manager_key="csv_io", kinds={"pandas"})
+@dg.asset(group_name="feature", io_manager_key="csv_io", kinds={"pandas"})
 def final_dataset(
     hourly_rentals: pd.DataFrame,
     clean_weather: pd.DataFrame,
-    clean_holidays: pd.DataFrame,
+    holidays_typed: pd.DataFrame,
 ) -> dg.MaterializeResult:
-    
     df = hourly_rentals.merge(clean_weather, on="datetime_hourly", how="left")
 
-    holiday_set = set(clean_holidays["date"])
+    holiday_set = set(holidays_typed["date"])
     df["is_holiday"] = df["datetime_hourly"].dt.date.isin(holiday_set).astype(int)
 
     return dg.MaterializeResult(
