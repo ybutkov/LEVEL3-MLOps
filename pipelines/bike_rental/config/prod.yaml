@@ -1,0 +1,3 @@
+# Prod: roots only. Layout comes from base.yaml. Absolute paths (or s3://... later).
+data_root:   /mnt/data
+dagster_dir: /mnt/dagster_storage
