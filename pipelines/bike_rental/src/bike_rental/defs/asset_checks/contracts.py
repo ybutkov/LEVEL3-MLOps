@@ -4,6 +4,7 @@ Each check validates the raw DataFrame against its Pandera schema defined in
 `defs/schemas.py`. `blocking=True` stops downstream materialization if the
 contract is violated.
 """
+
 import dagster as dg
 import pandas as pd
 import pandera as pa
@@ -19,6 +20,7 @@ from bike_rental.defs.schemas import HolidaysRaw, RentalsRaw, WeatherRaw
 
 
 def _validate_dataset(df: pd.DataFrame, schema) -> dg.AssetCheckResult:
+    """Validate a DataFrame against a Pandera schema and return the result."""
     try:
         schema.validate(df, lazy=True)
         return dg.AssetCheckResult(
@@ -32,30 +34,34 @@ def _validate_dataset(df: pd.DataFrame, schema) -> dg.AssetCheckResult:
             passed=False,
             description=f"{len(cases)} failure(s); first: {cases.iloc[0].to_dict()}",
             metadata={
-                "row_count":     len(df),
+                "row_count": len(df),
                 "failure_count": len(cases),
-                "failures":      dg.MetadataValue.md(cases.head(20).to_markdown()),
+                "failures": dg.MetadataValue.md(cases.head(20).to_markdown()),
             },
         )
 
 
 @dg.asset_check(asset=registered_rentals_raw, blocking=True)
 def registered_rentals_raw_contract(registered_rentals_raw: pd.DataFrame) -> dg.AssetCheckResult:
+    """Check the registered rentals data against its schema."""
     return _validate_dataset(registered_rentals_raw, RentalsRaw)
 
 
 @dg.asset_check(asset=direct_pickups_raw, blocking=True)
 def direct_pickups_raw_contract(direct_pickups_raw: pd.DataFrame) -> dg.AssetCheckResult:
+    """Check the direct pickup data against its schema."""
     return _validate_dataset(direct_pickups_raw, RentalsRaw)
 
 
 @dg.asset_check(asset=weather_raw, blocking=True)
 def weather_raw_contract(weather_raw: pd.DataFrame) -> dg.AssetCheckResult:
+    """Check the weather data against its schema."""
     return _validate_dataset(weather_raw, WeatherRaw)
 
 
 @dg.asset_check(asset=holidays_raw, blocking=True)
 def holidays_raw_contract(holidays_raw: pd.DataFrame) -> dg.AssetCheckResult:
+    """Check the holiday data against its schema."""
     return _validate_dataset(holidays_raw, HolidaysRaw)
 
 
@@ -73,10 +79,9 @@ def final_dataset_no_nulls(final_dataset: pd.DataFrame) -> dg.AssetCheckResult:
     passed = bad_cols.empty
     return dg.AssetCheckResult(
         passed=passed,
-        description=("all columns non-null" if passed
-                     else f"nulls in: {bad_cols.to_dict()}"),
+        description=("all columns non-null" if passed else f"nulls in: {bad_cols.to_dict()}"),
         metadata={
-            "row_count":   len(final_dataset),
+            "row_count": len(final_dataset),
             "null_totals": dg.MetadataValue.md(
                 bad_cols.to_markdown() if not bad_cols.empty else "_none_"
             ),
