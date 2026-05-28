@@ -1,5 +1,0 @@
-# Env-invariant data layout under the data root. Same on every stand.
-layout:
-  source:     raw/bike_rental
-  processed:  processed/bike_rental
-  quarantine: quarantine/bike_rental
