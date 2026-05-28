@@ -1,22 +1,28 @@
+"""Rentals primary layer: hourly rental counts per location."""
+
 import dagster as dg
 import pandas as pd
 
 
 @dg.asset(group_name="primary", kinds={"pandas"})
-def hourly_rentals(
-    context: dg.AssetExecutionContext,
-    rentals_typed: pd.DataFrame,
-) -> pd.DataFrame:
+def hourly_rentals(rentals_typed: pd.DataFrame) -> pd.DataFrame:
+    """Aggregate rentals to one row per hour and location.
 
+    A full hour-by-location grid is built so empty slots become zero counts,
+    then calendar features (month, hour, weekday, weekend) are added.
+    """
+    log = dg.get_dagster_logger()
 
     reg_counts = (
         rentals_typed[rentals_typed["is_registered"]]
-        .groupby(["datetime_hourly", "location_id"]).size()
+        .groupby(["datetime_hourly", "location_id"])
+        .size()
         .reset_index(name="registered_rentals")
     )
     direct_counts = (
         rentals_typed[~rentals_typed["is_registered"]]
-        .groupby(["datetime_hourly", "location_id"]).size()
+        .groupby(["datetime_hourly", "location_id"])
+        .size()
         .reset_index(name="direct_pickups")
     )
 
@@ -29,8 +35,7 @@ def hourly_rentals(
     )
 
     hourly_rentals = (
-        full_grid
-        .merge(reg_counts, on=["datetime_hourly", "location_id"], how="left")
+        full_grid.merge(reg_counts, on=["datetime_hourly", "location_id"], how="left")
         .merge(direct_counts, on=["datetime_hourly", "location_id"], how="left")
         .fillna(0)
         .astype({"registered_rentals": int, "direct_pickups": int})
@@ -39,14 +44,12 @@ def hourly_rentals(
         hourly_rentals["registered_rentals"] + hourly_rentals["direct_pickups"]
     )
 
-    context.log.info(f"Shape: {hourly_rentals.shape}")
-    context.log.info(hourly_rentals.head().to_string(index=False))
-    context.log.info(hourly_rentals.info())
+    log.info("hourly_rentals shape: %s", hourly_rentals.shape)
 
     dt = hourly_rentals["datetime_hourly"]
-    hourly_rentals["month"]       = dt.dt.month
+    hourly_rentals["month"] = dt.dt.month
     hourly_rentals["hour_of_day"] = dt.dt.hour
     hourly_rentals["day_of_week"] = dt.dt.dayofweek
-    hourly_rentals["is_weekend"]  = (dt.dt.dayofweek >= 5).astype(int)
+    hourly_rentals["is_weekend"] = (dt.dt.dayofweek >= 5).astype(int)
 
     return hourly_rentals

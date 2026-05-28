@@ -11,13 +11,13 @@ Two patterns live here:
   after a parse helper column (`parsed_dt`) has been added. NaT in `parsed_dt`
   → row goes to quarantine (see `validate_and_split`).
 """
+
 import pandas as pd
 import pandera.pandas as pa
 from pandera.errors import SchemaErrors
 from pandera.typing import Series
 
-
-USER_ID_MIN,     USER_ID_MAX     = 0, 300
+USER_ID_MIN, USER_ID_MAX = 0, 300
 LOCATION_ID_MIN, LOCATION_ID_MAX = 0, 20
 WEATHER_CONDITIONS = ["clear", "clouds", "light_rain", "heavy_rain"]
 DATETIME_FORMAT = "ISO8601"
@@ -53,40 +53,45 @@ def validate_and_split(
         if not schema_lvl.empty:
             raise RuntimeError(
                 f"schema-level validation errors: {schema_lvl.to_dict('records')}"
-            )
+            ) from e
         bad_idx = pd.Index(cases["index"].dropna().unique())
         quarantine = df.loc[bad_idx, raw_cols].copy()
-        clean      = df.drop(index=bad_idx)
+        clean = df.drop(index=bad_idx)
         return clean, quarantine
 
 
 class RentalsRaw(pa.DataFrameModel):
     """Schema shared by registered_rentals_raw and direct_pickups_raw."""
 
-    id:          Series[int] = pa.Field(unique=True, ge=1, nullable=False)
-    datetime:    Series[str] = pa.Field(nullable=False)
-    user_id:     Series[int] = pa.Field(ge=USER_ID_MIN,     le=USER_ID_MAX,     nullable=False)
+    id: Series[int] = pa.Field(unique=True, ge=1, nullable=False)
+    datetime: Series[str] = pa.Field(nullable=False)
+    user_id: Series[int] = pa.Field(ge=USER_ID_MIN, le=USER_ID_MAX, nullable=False)
     location_id: Series[int] = pa.Field(ge=LOCATION_ID_MIN, le=LOCATION_ID_MAX, nullable=False)
 
     class Config:
+        """Pandera validation settings."""
+
         strict = True
         coerce = False
-
 
 
 class WeatherRaw(pa.DataFrameModel):
-    id:                      Series[int]   = pa.Field(unique=True, ge=1, nullable=False)
-    datetime:                Series[str]   = pa.Field(unique=True, nullable=False)
-    conditions:              Series[str]   = pa.Field(nullable=False)
-    temperature_c:           Series[float] = pa.Field(ge=-40, le=50,  nullable=False)
-    perceived_temperature_c: Series[float] = pa.Field(ge=-50, le=60,  nullable=False)
-    humidity:                Series[float] = pa.Field(ge=0,   le=100, nullable=False)
-    windspeed_kmh:           Series[float] = pa.Field(ge=0,   le=200, nullable=False)
+    """Schema for the raw weather data."""
+
+    id: Series[int] = pa.Field(unique=True, ge=1, nullable=False)
+    datetime: Series[str] = pa.Field(unique=True, nullable=False)
+    conditions: Series[str] = pa.Field(nullable=False)
+    temperature_c: Series[float] = pa.Field(ge=-40, le=50, nullable=False)
+    perceived_temperature_c: Series[float] = pa.Field(ge=-50, le=60, nullable=False)
+    humidity: Series[float] = pa.Field(ge=0, le=100, nullable=False)
+    windspeed_kmh: Series[float] = pa.Field(ge=0, le=200, nullable=False)
 
     class Config:
+        """Pandera validation settings."""
+
         strict = True
         coerce = False
-   
+
     @pa.check("conditions", name="known_weather_condition")
     def _conditions_known(cls, s: pd.Series) -> pd.Series:
         return s.astype(str).str.lower().str.strip().isin(WEATHER_CONDITIONS)
@@ -99,11 +104,13 @@ class HolidaysRaw(pa.DataFrameModel):
     (intermediate), and ParsedDatetime catches parse failures via NaT detection.
     """
 
-    id:      Series[int] = pa.Field(unique=True, ge=1, nullable=False)
-    date:    Series[str] = pa.Field(unique=True, nullable=False)
+    id: Series[int] = pa.Field(unique=True, ge=1, nullable=False)
+    date: Series[str] = pa.Field(unique=True, nullable=False)
     holiday: Series[str] = pa.Field(nullable=False)
 
     class Config:
+        """Pandera validation settings."""
+
         strict = True
         coerce = False
 
@@ -121,5 +128,7 @@ class ParsedDatetime(pa.DataFrameModel):
     parsed_dt: Series[pd.Timestamp] = pa.Field(nullable=False)
 
     class Config:
+        """Pandera validation settings."""
+
         strict = False
         coerce = False
