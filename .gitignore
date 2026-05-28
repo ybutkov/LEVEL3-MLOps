@@ -36,4 +36,4 @@ htmlcov/
 
 # Pipeline-derived data (raw kept in repo)
 data/processed/
-
+data/quarantine/
