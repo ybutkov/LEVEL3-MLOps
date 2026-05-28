@@ -7,21 +7,26 @@ dependencies = [
     "numpy>=2.2.6",
     "pandas>=2.3.3",
     "pandera>=0.31.1",
+    "pydantic>=2.0",
+    "pyyaml>=6.0",
 ]
 
 [dependency-groups]
-dev = ["dagster-webserver", "dagster-dg-cli"]
+dev = ["dagster-webserver", "dagster-dg-cli", "ruff"]
 
 [build-system]
 requires = ["uv_build>=0.10.2,<0.11.0"]
 build-backend = "uv_build"
 
 [tool.ruff]
-line-length = 80
+line-length = 100
 target-version = "py314"
 
 [tool.ruff.lint]
 select = ["E", "W", "F", "I", "UP", "D"]
+
+[tool.ruff.lint.pydocstyle]
+convention = "numpy"
 
 [tool.dg]
 directory_type = "project"
