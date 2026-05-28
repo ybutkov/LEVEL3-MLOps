@@ -35,5 +35,5 @@ build/
 htmlcov/
 
 # Pipeline-derived data (raw kept in repo)
-data/processed/
-data/quarantine/
+*/data/processed/
+*/data/quarantine/

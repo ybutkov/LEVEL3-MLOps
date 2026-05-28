@@ -6,5 +6,5 @@
 #   processed:  path/to/local/processed/bike_rental
 #   quarantine: path/to/local/quarantine/bike_rental
 
-data_root:   ../../data
+data_root:   data
 dagster_dir: .dagster_storage
