@@ -1,6 +1,6 @@
-# Week 1 — Classification
+# Titanic — Classification (week 1)
 
-See [project_handout/README.md](project_handout/README.md) for the full assignment description.
+See [handout/README.md](handout/README.md) for the full assignment description.
 
 ## What's here
 
@@ -14,5 +14,5 @@ See [project_handout/README.md](project_handout/README.md) for the full assignme
 ## Run tests
 
 ```bash
-make test
+uv run pytest
 ```
