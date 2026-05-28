@@ -5,3 +5,35 @@ __pycache__/
 .mypy_cache/
 *.pyc
 *.pyo
+
+.ipynb_checkpoints/
+
+tmp/
+
+# Dagster runtime state
+.dagster_storage/
+.tmp_dagster_home_*/
+dagster_home/
+
+# Tool caches
+.pytest_cache/
+.ruff_cache/
+
+# Build artifacts
+dist/
+build/
+*.egg-info/
+
+# Secrets
+.env
+.env.local
+.env.*.local
+
+# Coverage
+.coverage
+.coverage.*
+htmlcov/
+
+# Pipeline-derived data (raw kept in repo)
+data/processed/
+data/quarantine/

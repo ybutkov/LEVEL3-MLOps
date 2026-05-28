@@ -1,0 +1,10 @@
+# Local dev: roots only. Layout comes from base.yaml; relative paths resolve
+# against the pipeline root
+
+# layout:
+#   source:     path/to/local/raw/bike_rental
+#   processed:  path/to/local/processed/bike_rental
+#   quarantine: path/to/local/quarantine/bike_rental
+
+data_root:   ../../data
+dagster_dir: .dagster_storage
