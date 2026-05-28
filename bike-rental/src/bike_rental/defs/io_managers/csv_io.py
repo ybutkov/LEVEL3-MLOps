@@ -12,9 +12,8 @@ class CSVIOManager(dg.IOManager):
     """Store and load DataFrame assets as CSV files in a base directory."""
 
     def __init__(self, base_dir: str):
-        """Create the manager and ensure the base directory exists."""
+        """Create the manager pointed at a base directory."""
         self.base_dir = Path(base_dir)
-        self.base_dir.mkdir(parents=True, exist_ok=True)
 
     def _path(self, context) -> Path:
         return self.base_dir / f"{context.asset_key.path[-1]}.csv"
@@ -24,6 +23,7 @@ class CSVIOManager(dg.IOManager):
         log = dg.get_dagster_logger()
         df = obj.value if isinstance(obj, dg.MaterializeResult) else obj
         path = self._path(context)
+        path.parent.mkdir(parents=True, exist_ok=True)
 
         try:
             df.to_csv(path, index=False)

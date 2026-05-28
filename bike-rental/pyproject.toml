@@ -28,6 +28,9 @@ select = ["E", "W", "F", "I", "UP", "D"]
 [tool.ruff.lint.pydocstyle]
 convention = "numpy"
 
+[tool.ruff.lint.per-file-ignores]
+"*.ipynb" = ["E501"]
+
 [tool.dg]
 directory_type = "project"
 

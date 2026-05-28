@@ -8,7 +8,7 @@ from typing import Self
 import yaml
 from pydantic import BaseModel
 
-ROOT = Path(__file__).resolve().parents[2]  # .../pipelines/bike_rental
+ROOT = Path(__file__).resolve().parents[2]
 CONFIG_DIR = ROOT / "config"
 
 
