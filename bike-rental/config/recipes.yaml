@@ -1,0 +1,49 @@
+split:                   # global train/val/test fractions (one setting for all models)
+  train_frac: 0.70
+  val_frac: 0.15          # test = remaining 0.15; set val_frac so train+val==1 for no test
+
+linear:
+  target: total_rentals
+  steps:
+    - kind: select
+      columns: [datetime_hourly,
+                hour_of_day,
+                month,
+                day_of_week,
+                conditions,
+                temperature_c,
+                perceived_temperature_c,
+                humidity,
+                windspeed_kmh,
+                days_since_launch,
+                is_weekend,
+                is_holiday,
+                total_rentals]
+    - kind: cyclic
+      periods: {hour_of_day: 24, month: 12, day_of_week: 7}
+    - kind: scale            # stateful: fit on train in the model, after the split
+      columns: [
+                conditions,
+                temperature_c,
+                perceived_temperature_c,
+                humidity,
+                windspeed_kmh, 
+                days_since_launch,
+                ]
+tree:
+  target: total_rentals
+  steps:
+    - kind: select
+      columns: [datetime_hourly,
+                month,
+                hour_of_day,
+                day_of_week,
+                is_weekend,
+                is_holiday,
+                conditions,
+                temperature_c,
+                perceived_temperature_c,
+                humidity,
+                windspeed_kmh,
+                days_since_launch,
+                total_rentals]

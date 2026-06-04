@@ -5,8 +5,8 @@ from dagster import Definitions, FilesystemIOManager, definitions
 from bike_rental.config import AppConfig
 from bike_rental.defs.asset_checks.contracts import (
     direct_pickups_raw_contract,
-    final_dataset_no_nulls,
     holidays_raw_contract,
+    hourly_by_location_no_nulls,
     registered_rentals_raw_contract,
     weather_raw_contract,
 )
@@ -25,8 +25,14 @@ from bike_rental.defs.assets.data.weather import (
     clean_weather,
     weather_split,
 )
-from bike_rental.defs.assets.ml import final_dataset
+from bike_rental.defs.assets.ml.dataset_linear_hourly import linear_dataset_hourly
+from bike_rental.defs.assets.ml.dataset_tree_hourly import tree_dataset_hourly
+from bike_rental.defs.assets.ml.feature import hourly_by_location, hourly_total
+from bike_rental.defs.assets.ml.model_hgb_hourly import hgb_hourly
+from bike_rental.defs.assets.ml.model_linear_hourly import linear_hourly
+from bike_rental.defs.assets.ml.model_rf_hourly import rf_hourly
 from bike_rental.defs.io_managers.csv_io import CSVIOManager
+from bike_rental.defs.io_managers.model_io import ModelIOManager
 from bike_rental.defs.resources.bike_data import BikeDataDirResource
 
 
@@ -45,19 +51,27 @@ def defs() -> Definitions:
             holidays_split,
             hourly_rentals,
             clean_weather,
-            final_dataset,
+            hourly_by_location,
+            hourly_total,
+            linear_dataset_hourly,
+            tree_dataset_hourly,
+            linear_hourly,
+            rf_hourly,
+            hgb_hourly,
         ],
         asset_checks=[
             registered_rentals_raw_contract,
             direct_pickups_raw_contract,
             weather_raw_contract,
             holidays_raw_contract,
-            final_dataset_no_nulls,
+            hourly_by_location_no_nulls,
         ],
         resources={
             "bike_data": BikeDataDirResource(base_path=cfg.source_dir),
             "io_manager": FilesystemIOManager(base_dir=cfg.dagster_storage_dir),
             "csv_io": CSVIOManager(base_dir=cfg.processed_dir),
             "quarantine_io": CSVIOManager(base_dir=cfg.quarantine_dir),
+            "model_io": ModelIOManager(base_dir=cfg.models_dir),
+            "base_config": AppConfig.load(),
         },
     )
