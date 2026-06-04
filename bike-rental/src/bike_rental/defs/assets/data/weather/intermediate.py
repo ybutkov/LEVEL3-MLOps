@@ -15,6 +15,12 @@ WEATHER_CONDITIONS_DTYPE = pd.CategoricalDtype(
     ordered=True,
 )
 
+# Feels-like temperature legitimately differs from the dry-bulb reading (wind
+# chill / heat index), but only so far — the real spread in this data tops out
+# at ~13°C. A larger gap is a sensor glitch (e.g. perceived ~0°C on a +24°C day,
+# 2012-08-17), not a real feels-like value.
+PERCEIVED_TEMP_MAX_GAP_C = 15
+
 
 @dg.multi_asset(
     outs={
@@ -32,7 +38,8 @@ WEATHER_CONDITIONS_DTYPE = pd.CategoricalDtype(
 def weather_split(weather_raw: pd.DataFrame):
     """Type-check weather rows and clean known sensor issues.
 
-    Unparseable timestamps go to quarantine. Zero-humidity readings are
+    Unparseable timestamps go to quarantine. Zero-humidity readings and
+    perceived-temperature values that decouple from the actual reading are
     treated as sensor errors and interpolated.
     """
     raw_cols = list(weather_raw.columns)
@@ -50,12 +57,21 @@ def weather_split(weather_raw: pd.DataFrame):
     typed = typed.drop(columns=["id", "datetime", "parsed_dt"])
 
     # known sensor outage: humidity sometimes reports 0% (physically impossible).
-    # TODO Check others ?
     humidity_zeros = int((typed["humidity"] == 0).sum())
     if humidity_zeros:
         log.warning("Humidity sensor reported 0%% in %d rows — interpolating", humidity_zeros)
 
     typed["humidity"] = typed["humidity"].replace(0, np.nan).interpolate("linear")
+
+    # known sensor glitch: perceived temperature decouples from the actual reading
+    # (e.g. ~0°C on a +24°C day, 2012-08-17). Blank the implausible gap and interpolate.
+    perceived_gap = (typed["perceived_temperature_c"] - typed["temperature_c"]).abs()
+    perceived_bad = int((perceived_gap > PERCEIVED_TEMP_MAX_GAP_C).sum())
+    if perceived_bad:
+        log.warning("Perceived temperature decoupled from actual in %d rows — interpolating", perceived_bad)
+
+    typed.loc[perceived_gap > PERCEIVED_TEMP_MAX_GAP_C, "perceived_temperature_c"] = np.nan
+    typed["perceived_temperature_c"] = typed["perceived_temperature_c"].interpolate("linear")
 
     normalized = typed["conditions"].astype(str).str.lower().str.strip()
     typed["conditions"] = normalized.astype(WEATHER_CONDITIONS_DTYPE)
@@ -63,6 +79,10 @@ def weather_split(weather_raw: pd.DataFrame):
     yield dg.Output(
         typed,
         output_name=TYPED_OUT,
-        metadata={"row_count": len(typed), "humidity_zeros": humidity_zeros},
+        metadata={
+            "row_count": len(typed),
+            "humidity_zeros": humidity_zeros,
+            "perceived_temp_fixed": perceived_bad,
+        },
     )
     yield dg.Output(quarantine, output_name=QUARANTINE_OUT, metadata={"row_count": len(quarantine)})

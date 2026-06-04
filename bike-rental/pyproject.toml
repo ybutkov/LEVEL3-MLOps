@@ -9,10 +9,19 @@ dependencies = [
     "pandera>=0.31.1",
     "pydantic>=2.0",
     "pyyaml>=6.0",
+    "scikit-learn>=1.5",
+    "joblib>=1.4",
 ]
 
 [dependency-groups]
-dev = ["dagster-webserver", "dagster-dg-cli", "ruff"]
+dev = [
+    "dagster-webserver",
+    "dagster-dg-cli",
+    "ruff",
+    "ipykernel>=7.2.0",
+    "matplotlib>=3.9",
+    "nbconvert>=7.16",
+]
 
 [build-system]
 requires = ["uv_build>=0.10.2,<0.11.0"]

@@ -3,13 +3,16 @@
 import dagster as dg
 import pandas as pd
 
+LAUNCH_DATE = pd.Timestamp("2011-01-01")  # start of observations → origin for the service-growth trend
+
 
 @dg.asset(group_name="primary", kinds={"pandas"})
 def hourly_rentals(rentals_typed: pd.DataFrame) -> pd.DataFrame:
     """Aggregate rentals to one row per hour and location.
 
     A full hour-by-location grid is built so empty slots become zero counts,
-    then calendar features (month, hour, weekday, weekend) are added.
+    then calendar features (month, hour, weekday, weekend, days_since_launch)
+    are added.
     """
     log = dg.get_dagster_logger()
 
@@ -51,5 +54,6 @@ def hourly_rentals(rentals_typed: pd.DataFrame) -> pd.DataFrame:
     hourly_rentals["hour_of_day"] = dt.dt.hour
     hourly_rentals["day_of_week"] = dt.dt.dayofweek
     hourly_rentals["is_weekend"] = (dt.dt.dayofweek >= 5).astype(int)
+    hourly_rentals["days_since_launch"] = (dt.dt.normalize() - LAUNCH_DATE).dt.days
 
     return hourly_rentals

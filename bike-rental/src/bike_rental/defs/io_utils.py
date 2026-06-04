@@ -4,6 +4,7 @@ from pathlib import Path
 
 import dagster as dg
 import pandas as pd
+import joblib
 from pandas.errors import EmptyDataError, ParserError
 
 
@@ -30,3 +31,22 @@ def read_csv_or_fail(path: Path, *, not_found_msg: str) -> pd.DataFrame:
 
     log.info("Loaded %d rows x %d cols from %s", len(df), df.shape[1], path)
     return df
+
+def read_model_or_fail(path: Path, *, not_found_msg: str):
+    """Read a model, translating I/O errors into dg.Failure with context."""
+    log = dg.get_dagster_logger()
+    try:
+        model = joblib.load(path)
+    except FileNotFoundError as e:
+        raise dg.Failure(
+            description=not_found_msg,
+            metadata={"path": str(path)},
+        ) from e
+    except Exception as e:
+        raise dg.Failure(
+            description=f"Failed to load model {path}: {e}",
+            metadata={"path": str(path)},
+        ) from e
+
+    log.info("Loaded model from %s", path)
+    return model
