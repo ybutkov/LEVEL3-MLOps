@@ -26,7 +26,19 @@ QUARANTINE_OUT = "holidays_quarantine"
 def holidays_split(holidays_raw: pd.DataFrame):
     """Type-check the holiday calendar and keep one date per holiday.
 
-    Rows with an unparseable date go to the quarantine output.
+    Dates are parsed and validated; rows with an unparseable date are routed to
+    the quarantine output. Kept rows are reduced to ``date`` and ``holiday``.
+
+    Parameters
+    ----------
+    holidays_raw : pandas.DataFrame
+        Raw holiday calendar with ``date`` and ``holiday`` columns.
+
+    Yields
+    ------
+    dagster.Output
+        ``holidays_typed`` — one (date, holiday) row per holiday; then
+        ``holidays_quarantine`` — rows dropped for an unparseable date.
     """
     log = dg.get_dagster_logger()
 

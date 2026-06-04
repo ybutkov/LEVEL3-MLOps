@@ -26,7 +26,22 @@ QUARANTINE_OUT = "rentals_quarantine"
 def rentals_split(registered_rentals_raw: pd.DataFrame, direct_pickups_raw: pd.DataFrame):
     """Combine registered and direct rentals into one typed table.
 
-    Rows with an unparseable timestamp go to the quarantine output.
+    The two raw sources are concatenated with an ``is_registered`` flag,
+    timestamps are parsed and validated, and rows with an unparseable timestamp
+    are routed to the quarantine output.
+
+    Parameters
+    ----------
+    registered_rentals_raw : pandas.DataFrame
+        Raw registered (pre-booked) rentals.
+    direct_pickups_raw : pandas.DataFrame
+        Raw direct-pickup rentals.
+
+    Yields
+    ------
+    dagster.Output
+        ``rentals_typed`` — validated rows with an hourly timestamp; then
+        ``rentals_quarantine`` — rows dropped for an unparseable timestamp.
     """
     log = dg.get_dagster_logger()
 

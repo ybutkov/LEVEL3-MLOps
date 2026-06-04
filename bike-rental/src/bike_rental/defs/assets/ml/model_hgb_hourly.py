@@ -42,7 +42,24 @@ class HGBModelConfig(TreeDatasetConfig):
 def hgb_hourly(
     tree_dataset_hourly: pd.DataFrame, config: HGBModelConfig
 ) -> dg.MaterializeResult:
-    """Train a HistGradientBoosting GBM on `tree_dataset_hourly` (raw features; passthrough preprocess)."""
+    """Train a HistGradientBoosting GBM on ``tree_dataset_hourly`` (raw integer features).
+
+    Trees need no stateless encoding, so the recipe preprocessor is a
+    passthrough. Reports validation metrics only; the test split is held out.
+
+    Parameters
+    ----------
+    tree_dataset_hourly : pandas.DataFrame
+        Assembled tree input table (raw features + target + time key).
+    config : HGBModelConfig
+        Tree recipe plus HistGradientBoosting hyperparameters.
+
+    Returns
+    -------
+    dagster.MaterializeResult
+        The fitted sklearn ``Pipeline``, with validation MAE / RMSE / R² /
+        RMSE-over-MAE and chronological-split metadata.
+    """
     target = config.target
     features = [c for c in tree_dataset_hourly.columns if c not in (target, "datetime_hourly")]
     assert_no_target_leak(features, target)

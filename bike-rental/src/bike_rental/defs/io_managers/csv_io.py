@@ -16,10 +16,24 @@ class CSVIOManager(dg.IOManager):
         self.base_dir = Path(base_dir)
 
     def _path(self, context) -> Path:
+        """Return the on-disk CSV path for an asset (``<base>/<asset>.csv``)."""
         return self.base_dir / f"{context.asset_key.path[-1]}.csv"
 
     def handle_output(self, context: dg.OutputContext, obj):
-        """Write the asset's DataFrame to a CSV file."""
+        """Write the asset's DataFrame to a CSV file.
+
+        Parameters
+        ----------
+        context : dagster.OutputContext
+            Output context; the asset key determines the file name.
+        obj : pandas.DataFrame or dagster.MaterializeResult
+            DataFrame to persist (unwrapped from a MaterializeResult if needed).
+
+        Raises
+        ------
+        dagster.Failure
+            If the CSV cannot be written.
+        """
         log = dg.get_dagster_logger()
         df = obj.value if isinstance(obj, dg.MaterializeResult) else obj
         path = self._path(context)
@@ -36,7 +50,18 @@ class CSVIOManager(dg.IOManager):
         log.info("Wrote %d rows x %d cols to %s", len(df), df.shape[1], path)
 
     def load_input(self, context: dg.InputContext) -> pd.DataFrame:
-        """Read an upstream asset's CSV file into a DataFrame."""
+        """Read an upstream asset's CSV file into a DataFrame.
+
+        Parameters
+        ----------
+        context : dagster.InputContext
+            Input context; the upstream asset key determines the file name.
+
+        Returns
+        -------
+        pandas.DataFrame
+            The upstream asset's stored table.
+        """
         path = self._path(context)
         return read_csv_or_fail(
             path,

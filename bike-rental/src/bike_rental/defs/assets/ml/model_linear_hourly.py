@@ -26,11 +26,25 @@ from bike_rental.defs.assets.ml.training.split import (
 def linear_hourly(
     linear_dataset_hourly: pd.DataFrame, config: LinearDatasetConfig
 ) -> dg.MaterializeResult:
-    """Train linear regression on `linear_dataset_hourly`, scaling per the recipe.
+    """Train linear regression on ``linear_dataset_hourly``, scaling per the recipe.
 
     Features are every column except the target and the time key. The recipe's
-    stateful steps (scale/one_hot) become a ColumnTransformer fit on train; all
-    other columns (cyclic sin/cos, binary flags) pass through.
+    stateful steps (scale / one_hot) become a ColumnTransformer fit on train;
+    other columns (cyclic sin/cos, binary flags) pass through. Reports
+    validation metrics only — the test split is held out.
+
+    Parameters
+    ----------
+    linear_dataset_hourly : pandas.DataFrame
+        Assembled linear input table (stateless features + target + time key).
+    config : LinearDatasetConfig
+        Recipe and target; its stateful steps drive the preprocessor.
+
+    Returns
+    -------
+    dagster.MaterializeResult
+        The fitted sklearn ``Pipeline``, with validation MAE / RMSE / R² /
+        RMSE-over-MAE and chronological-split metadata.
     """
     target = config.target
     features = [c for c in linear_dataset_hourly.columns if c not in (target, "datetime_hourly")]

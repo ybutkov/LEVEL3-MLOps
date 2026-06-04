@@ -38,6 +38,7 @@ class DatasetStep(dg.Config):
 
     @model_validator(mode="after")
     def _check_required(self) -> DatasetStep:
+        """Validate the step kind and that its required field is present."""
         if self.kind not in _REQUIRED_FIELD:
             raise ValueError(f"unknown step kind: {self.kind!r}")
         field = _REQUIRED_FIELD[self.kind]

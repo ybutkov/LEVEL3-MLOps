@@ -46,7 +46,21 @@ class AppConfig(BaseModel):
 
     @classmethod
     def load(cls) -> Self:
-        """Load and merge base + per-stand config for the active deployment."""
+        """Load and merge base + per-deployment config for the active stand.
+
+        The deployment is chosen by the ``DAGSTER_DEPLOYMENT`` env var (default
+        ``"local"``); its YAML is deep-merged over ``base.yaml``.
+
+        Returns
+        -------
+        AppConfig
+            The merged configuration.
+
+        Raises
+        ------
+        FileNotFoundError
+            If no config file exists for the active deployment.
+        """
         env = os.getenv("DAGSTER_DEPLOYMENT", "local")
         env_path = CONFIG_DIR / f"{env}.yaml"
         if not env_path.exists():
@@ -56,6 +70,7 @@ class AppConfig(BaseModel):
         return cls(**_deep_merge(base, env_cfg))
 
     def _path(self, *parts: str) -> str:
+        """Return an absolute path under the project root for the given parts."""
         return str(ROOT / Path(*parts))
 
     @property

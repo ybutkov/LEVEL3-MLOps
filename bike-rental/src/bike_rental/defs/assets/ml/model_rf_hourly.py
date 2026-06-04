@@ -34,7 +34,25 @@ class TreeModelConfig(TreeDatasetConfig):
 def rf_hourly(
     tree_dataset_hourly: pd.DataFrame, config: TreeModelConfig
 ) -> dg.MaterializeResult:
-    """Train a RandomForest on `tree_dataset_hourly` (raw features; passthrough preprocess)."""
+    """Train a RandomForest on ``tree_dataset_hourly`` (raw integer features).
+
+    Trees need no stateless encoding, so the recipe preprocessor is a
+    passthrough — but it is wired like the linear model, so adding a step later
+    would just work. Reports validation metrics only; the test split is held out.
+
+    Parameters
+    ----------
+    tree_dataset_hourly : pandas.DataFrame
+        Assembled tree input table (raw features + target + time key).
+    config : TreeModelConfig
+        Tree recipe plus RandomForest hyperparameters.
+
+    Returns
+    -------
+    dagster.MaterializeResult
+        The fitted sklearn ``Pipeline``, with validation MAE / RMSE / R² /
+        RMSE-over-MAE and chronological-split metadata.
+    """
     target = config.target
     features = [c for c in tree_dataset_hourly.columns if c not in (target, "datetime_hourly")]
     assert_no_target_leak(features, target)

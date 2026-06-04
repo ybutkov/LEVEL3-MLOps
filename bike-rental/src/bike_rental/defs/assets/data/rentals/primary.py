@@ -13,6 +13,18 @@ def hourly_rentals(rentals_typed: pd.DataFrame) -> pd.DataFrame:
     A full hour-by-location grid is built so empty slots become zero counts,
     then calendar features (month, hour, weekday, weekend, days_since_launch)
     are added.
+
+    Parameters
+    ----------
+    rentals_typed : pandas.DataFrame
+        Validated rentals with ``datetime_hourly``, ``location_id`` and the
+        ``is_registered`` flag.
+
+    Returns
+    -------
+    pandas.DataFrame
+        One row per (hour, location) with registered / direct / total counts
+        and the calendar features.
     """
     log = dg.get_dagster_logger()
 

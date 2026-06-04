@@ -29,7 +29,22 @@ class TreeDatasetConfig(DatasetConfig):
 def tree_dataset_hourly(
     hourly_total: pd.DataFrame, config: TreeDatasetConfig
 ) -> dg.MaterializeResult:
-    """Assemble the tree models' input table by applying the configured steps."""
+    """Assemble the tree model's input table by applying the configured steps.
+
+    Parameters
+    ----------
+    hourly_total : pandas.DataFrame
+        City-wide hourly base dataset.
+    config : TreeDatasetConfig
+        Recipe (target + ordered steps); for trees this is typically a single
+        ``select`` step, since no encoding is needed.
+
+    Returns
+    -------
+    dagster.MaterializeResult
+        The assembled feature table with row-count, column list, recipe steps
+        and a preview in metadata.
+    """
     df = build_dataset(hourly_total, config)
 
     columns = [c for c in df.columns if c != "datetime_hourly"]

@@ -35,7 +35,26 @@ def train_validate_test_time_split(
 ) -> tuple[pd.DataFrame, pd.Series, pd.DataFrame, pd.Series, pd.DataFrame, pd.Series]:
     """Split chronologically into train/val/test by unique timestamps.
 
-    With no test boundary (train+val == 1), val extends to the end and test is empty.
+    Rows are ordered by ``time_feature`` and cut at the global train/val
+    fractions. With no test boundary (train + val == 1), val extends to the end
+    and test is empty.
+
+    Parameters
+    ----------
+    df : pandas.DataFrame
+        Dataset to split; must contain ``time_feature``, ``features`` and ``target``.
+    time_feature : str
+        Column holding the timestamp used for ordering and cutting.
+    features : list of str
+        Feature columns to return as X.
+    target : str
+        Target column to return as y.
+
+    Returns
+    -------
+    tuple of pandas.DataFrame and pandas.Series
+        ``(X_train, y_train, X_val, y_val, X_test, y_test)``; the test frames are
+        empty when there is no test split.
     """
     ds = df.sort_values(time_feature).reset_index(drop=True)
     timestamps = np.sort(ds[time_feature].unique())
@@ -57,10 +76,23 @@ def train_validate_test_time_split(
 
 
 def describe_time_split(df: pd.DataFrame, time_feature: str) -> dict:
-    """Dagster metadata describing how the chronological split was made.
+    """Build Dagster metadata describing how the chronological split was made.
 
-    Logs the strategy, boundary timestamps, and per-split row counts so the split
-    is auditable from the asset's materialization in the UI.
+    Records the strategy, boundary timestamps and per-split row counts so the
+    split is auditable from the asset's materialization in the UI.
+
+    Parameters
+    ----------
+    df : pandas.DataFrame
+        The dataset being split.
+    time_feature : str
+        Column holding the timestamp used for the split.
+
+    Returns
+    -------
+    dict
+        Mapping of metadata keys to ``dagster.MetadataValue`` (strategy, train/val
+        boundaries, per-split row counts).
     """
     ds = df.sort_values(time_feature)
     timestamps = np.sort(ds[time_feature].unique())

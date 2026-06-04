@@ -31,10 +31,12 @@ from bike_rental.defs.assets.ml.training.guards import assert_no_target_leak
 
 
 def _apply_cyclic(df: pd.DataFrame, step: DatasetStep) -> pd.DataFrame:
+    """Apply the ``cyclic`` step: sin/cos-encode the configured columns."""
     return add_cyclic_features(df, step.periods)
 
 
 def _apply_select(df: pd.DataFrame, step: DatasetStep) -> pd.DataFrame:
+    """Apply the ``select`` step: keep only the configured columns."""
     return df[step.columns].copy()
 
 
@@ -56,10 +58,12 @@ def _step_inputs(step: DatasetStep) -> list[str]:
 
 
 def _make_scale(step: DatasetStep) -> StandardScaler:
+    """Build the transformer for a ``scale`` step (a StandardScaler)."""
     return StandardScaler()
 
 
 def _make_one_hot(step: DatasetStep) -> OneHotEncoder:
+    """Build the transformer for a ``one_hot`` step (an OneHotEncoder)."""
     return OneHotEncoder(handle_unknown="ignore")
 
 
@@ -73,7 +77,19 @@ assert set(STATEFUL_TRANSFORMERS) == _STATEFUL_KINDS, (
 
 
 def stateful_columns(config: DatasetConfig) -> set[str]:
-    """Columns referenced by stateful steps — must exist in the assembled dataset."""
+    """Return the columns referenced by the recipe's stateful steps.
+
+    Parameters
+    ----------
+    config : DatasetConfig
+        The recipe.
+
+    Returns
+    -------
+    set of str
+        Columns named by ``scale`` / ``one_hot`` steps; these must exist in the
+        assembled dataset.
+    """
     return {
         col
         for step in config.steps
@@ -83,9 +99,21 @@ def stateful_columns(config: DatasetConfig) -> set[str]:
 
 
 def assert_recipe_columns(config: DatasetConfig, columns) -> None:
-    """Fail if `target` or any stateful-step column is absent from `columns`.
+    """Fail if ``target`` or any stateful-step column is absent from ``columns``.
 
-    Checked against the REAL columns of the assembled dataset (no name guessing).
+    Checked against the real columns of the assembled dataset (no name guessing).
+
+    Parameters
+    ----------
+    config : DatasetConfig
+        The recipe (target + steps).
+    columns : iterable of str
+        The actual columns of the assembled dataset.
+
+    Raises
+    ------
+    dagster.Failure
+        If any required column is missing.
     """
     needed = stateful_columns(config) | {config.target}
     missing = sorted(needed - set(columns))
@@ -103,13 +131,31 @@ def assert_recipe_columns(config: DatasetConfig, columns) -> None:
 
 
 def build_dataset(df: pd.DataFrame, config: DatasetConfig) -> pd.DataFrame:
-    """Apply the recipe's stateless steps in order; skip stateful ones.
+    """Apply the recipe's stateless steps in order; skip the stateful ones.
 
-    Each stateless step's inputs are checked against the real columns present
-    when it runs; after assembly, `target` + stateful columns must exist and the
-    no-target-leak rule is enforced — so a leaky dataset is never even written.
-    Stateful steps are only declared here — running them before the split would
-    leak; `build_preprocessor` handles them in the model.
+    Each stateless step's inputs are checked against the columns present when it
+    runs; after assembly, ``target`` plus stateful columns must exist and the
+    no-target-leak rule is enforced — so a leaky dataset is never written.
+    Stateful steps are only declared here (running them before the split would
+    leak); ``build_preprocessor`` handles them inside the model.
+
+    Parameters
+    ----------
+    df : pandas.DataFrame
+        Source frame (e.g. the ``hourly_total`` base dataset).
+    config : DatasetConfig
+        The recipe to apply.
+
+    Returns
+    -------
+    pandas.DataFrame
+        The assembled, leakage-checked feature table.
+
+    Raises
+    ------
+    dagster.Failure
+        If a step's inputs are missing, a required column is absent, or a target
+        component would leak into the features.
     """
     for step in config.steps:
         if step.kind in _STATEFUL_KINDS:
@@ -134,8 +180,19 @@ def build_dataset(df: pd.DataFrame, config: DatasetConfig) -> pd.DataFrame:
 def build_preprocessor(config: DatasetConfig) -> ColumnTransformer:
     """Assemble an unfitted ColumnTransformer from the recipe's stateful steps.
 
-    Each stateful step -> one transformer over its `columns`; everything else
-    passes through. No stateful steps -> pure passthrough. The model fits it.
+    Each stateful step becomes one transformer over its ``columns``; all other
+    columns pass through. With no stateful steps this is a pure passthrough. The
+    model fits it on the train fold.
+
+    Parameters
+    ----------
+    config : DatasetConfig
+        The recipe whose stateful steps (``scale`` / ``one_hot``) are assembled.
+
+    Returns
+    -------
+    sklearn.compose.ColumnTransformer
+        Unfitted transformer with ``remainder="passthrough"``.
     """
     transformers = [
         (f"{step.kind}_{i}", STATEFUL_TRANSFORMERS[step.kind](step), step.columns)

@@ -32,10 +32,18 @@ HOURLY_FEATURES = [
 ]
 
 def parse_datetime(s: pd.Series) -> pd.Series:
-    """Parse string column to Timestamp using project DATETIME_FORMAT.
+    """Parse a string column to Timestamp using the project ``DATETIME_FORMAT``.
 
-    Returns NaT for unparseable rows (caller decides whether to keep or
-    route to quarantine).
+    Parameters
+    ----------
+    s : pandas.Series
+        String column to parse.
+
+    Returns
+    -------
+    pandas.Series
+        Parsed timestamps; unparseable values become ``NaT`` (the caller decides
+        whether to keep or route them to quarantine).
     """
     return pd.to_datetime(s, format=DATETIME_FORMAT, errors="coerce")
 
@@ -45,12 +53,31 @@ def validate_and_split(
     schema,
     raw_cols: list[str],
 ) -> tuple[pd.DataFrame, pd.DataFrame]:
-    """Validate `df` against `schema`, return (clean, quarantine).
+    """Validate ``df`` against ``schema`` and split into clean and quarantine.
 
-    Schema-level errors (missing columns, wrong dtypes) → RuntimeError —
-    partial processing is unsafe.
-    Row-level errors → those rows go to quarantine with only `raw_cols`
-    columns (any helper columns added before validation are stripped).
+    Schema-level errors (missing columns, wrong dtypes) raise ``RuntimeError`` —
+    partial processing is unsafe. Row-level errors send only those rows to
+    quarantine, keeping just ``raw_cols`` (helper columns added before
+    validation are stripped).
+
+    Parameters
+    ----------
+    df : pandas.DataFrame
+        Frame to validate (may include helper columns such as ``parsed_dt``).
+    schema : pandera.DataFrameModel
+        Pandera schema to validate against.
+    raw_cols : list of str
+        Columns to keep on quarantined rows.
+
+    Returns
+    -------
+    tuple of pandas.DataFrame
+        ``(clean, quarantine)``; ``quarantine`` is empty when validation passes.
+
+    Raises
+    ------
+    RuntimeError
+        On schema-level validation errors.
     """
     try:
         schema.validate(df, lazy=True)
@@ -102,6 +129,7 @@ class WeatherRaw(pa.DataFrameModel):
 
     @pa.check("conditions", name="known_weather_condition")
     def _conditions_known(cls, s: pd.Series) -> pd.Series:
+        """Check each value is a known weather condition (case-insensitive)."""
         return s.astype(str).str.lower().str.strip().isin(WEATHER_CONDITIONS)
 
 

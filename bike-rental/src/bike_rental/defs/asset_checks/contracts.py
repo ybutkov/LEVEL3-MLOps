@@ -43,36 +43,90 @@ def _validate_dataset(df: pd.DataFrame, schema) -> dg.AssetCheckResult:
 
 @dg.asset_check(asset=registered_rentals_raw, blocking=True)
 def registered_rentals_raw_contract(registered_rentals_raw: pd.DataFrame) -> dg.AssetCheckResult:
-    """Check the registered rentals data against its schema."""
+    """Check the registered-rentals raw data against its schema.
+
+    Parameters
+    ----------
+    registered_rentals_raw : pandas.DataFrame
+        The raw asset to validate.
+
+    Returns
+    -------
+    dagster.AssetCheckResult
+        Pass/fail with failure details in metadata; blocking on failure.
+    """
     return _validate_dataset(registered_rentals_raw, RentalsRaw)
 
 
 @dg.asset_check(asset=direct_pickups_raw, blocking=True)
 def direct_pickups_raw_contract(direct_pickups_raw: pd.DataFrame) -> dg.AssetCheckResult:
-    """Check the direct pickup data against its schema."""
+    """Check the direct-pickup raw data against its schema.
+
+    Parameters
+    ----------
+    direct_pickups_raw : pandas.DataFrame
+        The raw asset to validate.
+
+    Returns
+    -------
+    dagster.AssetCheckResult
+        Pass/fail with failure details in metadata; blocking on failure.
+    """
     return _validate_dataset(direct_pickups_raw, RentalsRaw)
 
 
 @dg.asset_check(asset=weather_raw, blocking=True)
 def weather_raw_contract(weather_raw: pd.DataFrame) -> dg.AssetCheckResult:
-    """Check the weather data against its schema."""
+    """Check the weather raw data against its schema.
+
+    Parameters
+    ----------
+    weather_raw : pandas.DataFrame
+        The raw asset to validate.
+
+    Returns
+    -------
+    dagster.AssetCheckResult
+        Pass/fail with failure details in metadata; blocking on failure.
+    """
     return _validate_dataset(weather_raw, WeatherRaw)
 
 
 @dg.asset_check(asset=holidays_raw, blocking=True)
 def holidays_raw_contract(holidays_raw: pd.DataFrame) -> dg.AssetCheckResult:
-    """Check the holiday data against its schema."""
+    """Check the holiday raw data against its schema.
+
+    Parameters
+    ----------
+    holidays_raw : pandas.DataFrame
+        The raw asset to validate.
+
+    Returns
+    -------
+    dagster.AssetCheckResult
+        Pass/fail with failure details in metadata; blocking on failure.
+    """
     return _validate_dataset(holidays_raw, HolidaysRaw)
 
 
 @dg.asset_check(asset=hourly_by_location, blocking=False)
 def hourly_by_location_no_nulls(hourly_by_location: pd.DataFrame) -> dg.AssetCheckResult:
-    """Canary: no NaN anywhere in the published dataset.
+    """Canary check: no NaN anywhere in the published feature table.
 
-    Currently safe because EDA §5.2 confirmed weather covers every rental
-    hour. If a future weather drop has gaps during active hours, the left
-    join would surface NaN here — this check fires before training consumes
-    bad data. Non-blocking: dataset still publishes, but the alert is loud.
+    Currently safe because EDA confirmed weather covers every rental hour. If a
+    future weather drop has gaps during active hours, the left join would surface
+    NaN here — this fires before training consumes bad data. Non-blocking: the
+    dataset still publishes, but the alert is loud.
+
+    Parameters
+    ----------
+    hourly_by_location : pandas.DataFrame
+        The published per-(hour, location) feature table.
+
+    Returns
+    -------
+    dagster.AssetCheckResult
+        Pass when all columns are non-null; otherwise lists the offending columns.
     """
     nulls = hourly_by_location.isnull().sum()
     bad_cols = nulls[nulls > 0]

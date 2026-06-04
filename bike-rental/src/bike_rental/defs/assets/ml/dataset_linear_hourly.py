@@ -30,7 +30,22 @@ class LinearDatasetConfig(DatasetConfig):
 def linear_dataset_hourly(
     hourly_total: pd.DataFrame, config: LinearDatasetConfig
 ) -> dg.MaterializeResult:
-    """Assemble the linear model's input table by applying the configured steps."""
+    """Assemble the linear model's input table by applying the configured steps.
+
+    Parameters
+    ----------
+    hourly_total : pandas.DataFrame
+        City-wide hourly base dataset.
+    config : LinearDatasetConfig
+        Recipe (target + ordered stateless steps). Stateful steps are left for
+        the model's Pipeline and not applied here.
+
+    Returns
+    -------
+    dagster.MaterializeResult
+        The assembled feature table with row-count, column list, recipe steps
+        and a preview in metadata.
+    """
     df = build_dataset(hourly_total, config)
 
     columns = [c for c in df.columns if c != "datetime_hourly"]

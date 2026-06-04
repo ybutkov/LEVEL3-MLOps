@@ -13,11 +13,22 @@ import pandas as pd
 
 
 def add_cyclic_features(df: pd.DataFrame, periods: dict[str, int]) -> pd.DataFrame:
-    """Encode each cyclic column as sin/cos and drop the raw source column.
+    """Encode cyclic columns as sin/cos pairs and drop the raw source columns.
 
-    `periods` maps a column to its cycle length, e.g. ``{"hour_of_day": 24}``.
-    For column ``c`` this adds ``c_sin`` / ``c_cos`` and removes ``c`` — the
-    resulting frame shows exactly the engineered features the model consumes.
+    For each column ``c`` this adds ``c_sin`` / ``c_cos`` and removes ``c``, so
+    the resulting frame shows exactly the engineered features the model consumes.
+
+    Parameters
+    ----------
+    df : pandas.DataFrame
+        Input frame containing the columns named in ``periods``.
+    periods : dict of {str: int}
+        Maps each cyclic column to its cycle length, e.g. ``{"hour_of_day": 24}``.
+
+    Returns
+    -------
+    pandas.DataFrame
+        Copy of ``df`` with each cyclic column replaced by its sin/cos pair.
     """
     out = df.copy()
     for col, period in periods.items():

@@ -79,8 +79,21 @@ def _validate_steps(name: str, steps: object) -> None:
 def load_recipe(name: str) -> dict:
     """Return the named recipe as ``{"target": str, "steps": [dict, ...]}``, validated.
 
-    File absent -> built-in fallback. File present but missing the recipe, its
-    'target', or its 'steps' (or with an invalid step) -> `RecipeConfigError`.
+    Parameters
+    ----------
+    name : str
+        Recipe name (e.g. ``"linear"`` or ``"tree"``).
+
+    Returns
+    -------
+    dict
+        ``{"target": str, "steps": list of dict}``.
+
+    Raises
+    ------
+    RecipeConfigError
+        If the file is present but the recipe is missing, or its ``target`` /
+        ``steps`` are missing or invalid. (File absent → built-in fallback.)
     """
     data = _read_recipes_file()
     if data is None:
@@ -107,11 +120,19 @@ _DEFAULT_SPLIT = {"train_frac": 0.70, "val_frac": 0.15}
 
 
 def load_split() -> dict:
-    """Return global split fractions ``{"train_frac", "val_frac"}``, validated.
+    """Return the global split fractions ``{"train_frac", "val_frac"}``, validated.
 
-    Falls back to defaults if the `split` key is absent. Requires
-    ``0 < train_frac < 1``, ``0 < val_frac`` and ``train_frac + val_frac <= 1``
-    (== 1 means a 2-way train/val split with an empty test set).
+    Returns
+    -------
+    dict
+        ``{"train_frac": float, "val_frac": float}``; falls back to defaults if
+        the ``split`` key is absent.
+
+    Raises
+    ------
+    RecipeConfigError
+        Unless ``0 < train_frac < 1``, ``0 < val_frac`` and
+        ``train_frac + val_frac <= 1`` (== 1 means a 2-way split, empty test set).
     """
     data = _read_recipes_file()
     split = (data or {}).get("split") or _DEFAULT_SPLIT

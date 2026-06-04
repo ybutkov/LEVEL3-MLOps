@@ -38,9 +38,22 @@ PERCEIVED_TEMP_MAX_GAP_C = 15
 def weather_split(weather_raw: pd.DataFrame):
     """Type-check weather rows and clean known sensor issues.
 
-    Unparseable timestamps go to quarantine. Zero-humidity readings and
-    perceived-temperature values that decouple from the actual reading are
-    treated as sensor errors and interpolated.
+    Unparseable timestamps are routed to the quarantine output. Two sensor
+    glitches are repaired by interpolation: zero-humidity readings, and
+    perceived-temperature values that decouple from the actual reading by more
+    than ``PERCEIVED_TEMP_MAX_GAP_C``.
+
+    Parameters
+    ----------
+    weather_raw : pandas.DataFrame
+        Raw weather rows with a ``datetime`` column.
+
+    Yields
+    ------
+    dagster.Output
+        ``weather_typed`` — validated, cleaned weather keyed by
+        ``datetime_hourly``; then ``weather_quarantine`` — rows dropped for an
+        unparseable timestamp.
     """
     raw_cols = list(weather_raw.columns)
 

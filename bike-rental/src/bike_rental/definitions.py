@@ -38,7 +38,13 @@ from bike_rental.defs.resources.bike_data import BikeDataDirResource
 
 @definitions
 def defs() -> Definitions:
-    """Build the Dagster Definitions for the bike rental pipeline."""
+    """Build the Dagster ``Definitions`` for the bike-rental pipeline.
+
+    Returns
+    -------
+    dagster.Definitions
+        All assets, asset checks, resources and IO managers wired together.
+    """
     cfg = AppConfig.load()
     return Definitions(
         assets=[

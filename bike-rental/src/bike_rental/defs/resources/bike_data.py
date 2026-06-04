@@ -14,7 +14,18 @@ class BikeDataDirResource(dg.ConfigurableResource):
     base_path: str
 
     def load_csv(self, filename: str) -> pd.DataFrame:
-        """Load a CSV from the resource's base directory by file name."""
+        """Load a CSV from the resource's base directory by file name.
+
+        Parameters
+        ----------
+        filename : str
+            File name relative to ``base_path``.
+
+        Returns
+        -------
+        pandas.DataFrame
+            The loaded CSV (logs a warning if it has zero rows).
+        """
         path = Path(self.base_path) / filename
         log = dg.get_dagster_logger()
 

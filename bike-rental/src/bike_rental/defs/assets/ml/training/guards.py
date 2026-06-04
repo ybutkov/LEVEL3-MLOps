@@ -6,11 +6,23 @@ from bike_rental.defs import schemas
 
 
 def assert_no_target_leak(features: list[str], target: str) -> None:
-    """Fail if a target-related column other than `target` is used as a feature.
+    """Fail if a target-related column other than ``target`` is used as a feature.
 
-    `total_rentals = registered_rentals + direct_pickups`, so whenever one of the
-    three is the target, the other two leak it and must not be features. The set
-    of forbidden columns therefore depends on the chosen target.
+    ``total_rentals = registered_rentals + direct_pickups``, so whenever one of
+    the three is the target the other two would leak it. The forbidden set
+    therefore depends on the chosen target.
+
+    Parameters
+    ----------
+    features : list of str
+        Feature column names about to be used for training.
+    target : str
+        The chosen target column.
+
+    Raises
+    ------
+    dagster.Failure
+        If any forbidden target-related column appears in ``features``.
     """
     target_related = {schemas.TARGET, *schemas.TARGET_COMPONENTS}
     leaked = sorted((target_related - {target}) & set(features))

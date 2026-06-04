@@ -9,11 +9,26 @@ from pandas.errors import EmptyDataError, ParserError
 
 
 def read_csv_or_fail(path: Path, *, not_found_msg: str) -> pd.DataFrame:
-    """Read a CSV, translating I/O errors into dg.Failure with context.
+    """Read a CSV, translating I/O errors into ``dagster.Failure`` with context.
 
-    `not_found_msg` is set by the caller because a missing file means different
-    things in different layers (missing source data vs. unmaterialized upstream),
-    with different causes and fixes.
+    Parameters
+    ----------
+    path : pathlib.Path
+        Path to the CSV file.
+    not_found_msg : str
+        Message used when the file is missing — set by the caller because a
+        missing file means different things in different layers (missing source
+        data vs. unmaterialized upstream).
+
+    Returns
+    -------
+    pandas.DataFrame
+        The loaded CSV.
+
+    Raises
+    ------
+    dagster.Failure
+        If the file is missing or cannot be parsed.
     """
     log = dg.get_dagster_logger()
     try:
@@ -33,7 +48,25 @@ def read_csv_or_fail(path: Path, *, not_found_msg: str) -> pd.DataFrame:
     return df
 
 def read_model_or_fail(path: Path, *, not_found_msg: str):
-    """Read a model, translating I/O errors into dg.Failure with context."""
+    """Load a joblib-serialized model, translating I/O errors into ``dagster.Failure``.
+
+    Parameters
+    ----------
+    path : pathlib.Path
+        Path to the ``.joblib`` model file.
+    not_found_msg : str
+        Message used when the file is missing.
+
+    Returns
+    -------
+    object
+        The deserialized model (typically an sklearn ``Pipeline``).
+
+    Raises
+    ------
+    dagster.Failure
+        If the file is missing or cannot be loaded.
+    """
     log = dg.get_dagster_logger()
     try:
         model = joblib.load(path)
