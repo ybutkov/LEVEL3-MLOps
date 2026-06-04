@@ -3,9 +3,11 @@
 import dagster as dg
 import pandas as pd
 
+from bike_rental.defs import schemas
+
 
 @dg.asset(group_name="feature", io_manager_key="csv_io", kinds={"pandas"})
-def final_dataset(
+def hourly_by_location(
     hourly_rentals: pd.DataFrame,
     clean_weather: pd.DataFrame,
     holidays_typed: pd.DataFrame,
@@ -19,6 +21,29 @@ def final_dataset(
 
     holiday_set = set(holidays_typed["date"])
     df["is_holiday"] = df["datetime_hourly"].dt.date.isin(holiday_set).astype(int)
+
+    return dg.MaterializeResult(
+        value=df,
+        metadata={
+            "row_count": dg.MetadataValue.int(len(df)),
+            "preview": dg.MetadataValue.md(df.head().to_markdown()),
+        },
+    )
+
+
+@dg.asset(group_name="feature", io_manager_key="csv_io", kinds={"pandas"})
+def hourly_total(hourly_by_location: pd.DataFrame,) -> dg.MaterializeResult:
+
+    df = (
+        hourly_by_location
+        .groupby("datetime_hourly")
+        .agg(total_rentals=("total_rentals", "sum"),
+             registered_rentals=("registered_rentals", "sum"),
+             direct_pickups=("direct_pickups", "sum"),
+             **{f: (f, "first") for f in schemas.HOURLY_FEATURES},
+             )
+        .reset_index()
+    )
 
     return dg.MaterializeResult(
         value=df,

@@ -21,7 +21,15 @@ USER_ID_MIN, USER_ID_MAX = 0, 300
 LOCATION_ID_MIN, LOCATION_ID_MAX = 0, 20
 WEATHER_CONDITIONS = ["clear", "clouds", "light_rain", "heavy_rain"]
 DATETIME_FORMAT = "ISO8601"
+LAUNCH_DATE = pd.Timestamp("2011-01-01")
 
+TARGET = "total_rentals"
+TARGET_COMPONENTS = ["registered_rentals", "direct_pickups"]
+HOURLY_FEATURES = [
+    "month", "hour_of_day", "day_of_week", "is_weekend", "is_holiday",
+    "conditions", "temperature_c", "perceived_temperature_c", "humidity",
+    "windspeed_kmh", "days_since_launch",
+]
 
 def parse_datetime(s: pd.Series) -> pd.Series:
     """Parse string column to Timestamp using project DATETIME_FORMAT.

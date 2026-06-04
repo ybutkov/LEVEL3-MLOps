@@ -15,7 +15,7 @@ from bike_rental.defs.assets.data.raw import (
     registered_rentals_raw,
     weather_raw,
 )
-from bike_rental.defs.assets.ml import final_dataset
+from bike_rental.defs.assets.ml import hourly_by_location
 from bike_rental.defs.schemas import HolidaysRaw, RentalsRaw, WeatherRaw
 
 
@@ -65,8 +65,8 @@ def holidays_raw_contract(holidays_raw: pd.DataFrame) -> dg.AssetCheckResult:
     return _validate_dataset(holidays_raw, HolidaysRaw)
 
 
-@dg.asset_check(asset=final_dataset, blocking=False)
-def final_dataset_no_nulls(final_dataset: pd.DataFrame) -> dg.AssetCheckResult:
+@dg.asset_check(asset=hourly_by_location, blocking=False)
+def hourly_by_location_no_nulls(hourly_by_location: pd.DataFrame) -> dg.AssetCheckResult:
     """Canary: no NaN anywhere in the published dataset.
 
     Currently safe because EDA §5.2 confirmed weather covers every rental
@@ -74,14 +74,14 @@ def final_dataset_no_nulls(final_dataset: pd.DataFrame) -> dg.AssetCheckResult:
     join would surface NaN here — this check fires before training consumes
     bad data. Non-blocking: dataset still publishes, but the alert is loud.
     """
-    nulls = final_dataset.isnull().sum()
+    nulls = hourly_by_location.isnull().sum()
     bad_cols = nulls[nulls > 0]
     passed = bad_cols.empty
     return dg.AssetCheckResult(
         passed=passed,
         description=("all columns non-null" if passed else f"nulls in: {bad_cols.to_dict()}"),
         metadata={
-            "row_count": len(final_dataset),
+            "row_count": len(hourly_by_location),
             "null_totals": dg.MetadataValue.md(
                 bad_cols.to_markdown() if not bad_cols.empty else "_none_"
             ),
