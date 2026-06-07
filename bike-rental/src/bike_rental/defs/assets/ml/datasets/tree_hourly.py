@@ -1,9 +1,9 @@
 import dagster as dg
 import pandas as pd
 
-from bike_rental.defs.assets.ml.recipe.builders import build_dataset
-from bike_rental.defs.assets.ml.recipe.recipe_config import RecipeConfig
-from bike_rental.defs.assets.ml.recipe.schema import DatasetConfig
+from bike_rental.defs.assets.ml.recipes.builders import build_dataset
+from bike_rental.defs.assets.ml.recipes.recipe_config import RecipeConfig
+from bike_rental.defs.assets.ml.recipes.schema import DatasetConfig
 
 
 @dg.asset(group_name="model_datasets", io_manager_key="csv_io", kinds={"pandas"})

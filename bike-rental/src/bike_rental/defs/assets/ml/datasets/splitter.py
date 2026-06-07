@@ -10,7 +10,7 @@ import dagster as dg
 import numpy as np
 import pandas as pd
 
-from bike_rental.defs.assets.ml.recipe.recipe_config import RecipeConfig
+from bike_rental.defs.assets.ml.recipes.recipe_config import RecipeConfig
 
 
 class DatasetSplitter():

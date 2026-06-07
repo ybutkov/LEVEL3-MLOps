@@ -2,8 +2,8 @@ import dagster as dg
 import pandas as pd
 from sklearn.ensemble import HistGradientBoostingRegressor
 
-from bike_rental.defs.assets.ml.recipe.recipe_config import RecipeConfig
-from bike_rental.defs.assets.ml.training.train import train_and_evaluate
+from bike_rental.defs.assets.ml.recipes.recipe_config import RecipeConfig
+from bike_rental.defs.assets.ml.models.training import train_and_evaluate
 
 
 class HGBModelConfig(dg.Config):
@@ -26,12 +26,12 @@ def hgb_hourly(
 ) -> dg.MaterializeResult:
 
     estimator = HistGradientBoostingRegressor(**config.model_dump())
-    result = train_and_evaluate(tree_dataset_hourly_train, tree_dataset_hourly_val, 
+    trainingResult = train_and_evaluate(tree_dataset_hourly_train, tree_dataset_hourly_val, 
                                 recipe_config, "tree", estimator)
     return dg.MaterializeResult(
-        value=result.pipeline,
+        value=trainingResult.pipeline,
         metadata={
-            **result.metadata,
+            **trainingResult.metadata,
             "model_type": dg.MetadataValue.text("hgb"),
             "params": dg.MetadataValue.json(config.model_dump()),
         },

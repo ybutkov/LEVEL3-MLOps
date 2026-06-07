@@ -7,10 +7,10 @@ from sklearn.base import BaseEstimator
 from sklearn.metrics import mean_absolute_error, mean_squared_error, r2_score
 from sklearn.pipeline import Pipeline
 
-from bike_rental.defs.assets.ml.recipe.recipe_config import RecipeConfig
-from bike_rental.defs.assets.ml.recipe.schema import DatasetConfig
-from bike_rental.defs.assets.ml.recipe.builders import assert_recipe_columns, build_preprocessor
-from bike_rental.defs.assets.ml.training.guards import assert_no_target_leak
+from bike_rental.defs.assets.ml.recipes.recipe_config import RecipeConfig
+from bike_rental.defs.assets.ml.recipes.schema import DatasetConfig
+from bike_rental.defs.assets.ml.recipes.builders import assert_recipe_columns, build_preprocessor
+from bike_rental.defs.assets.ml.guards import assert_no_target_leak
 
 TIME_KEY = "datetime_hourly"
 

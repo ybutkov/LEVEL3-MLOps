@@ -22,14 +22,14 @@ from bike_rental.defs.assets.data.weather import clean_weather, weather_split
 from bike_rental.defs.assets.ml.base_dataset import hourly_by_location, hourly_total
 from bike_rental.defs.assets.ml.datasets.linear_hourly import linear_dataset_hourly
 from bike_rental.defs.assets.ml.datasets.tree_hourly import tree_dataset_hourly
-from bike_rental.defs.assets.ml.datasets.splits import linear_dataset_splits, tree_dataset_splits
+from bike_rental.defs.assets.ml.datasets.split_datasets import linear_dataset_splits, tree_dataset_splits
 from bike_rental.defs.assets.ml.models.hgb_hourly import hgb_hourly
 from bike_rental.defs.assets.ml.models.linear_hourly import linear_hourly
 from bike_rental.defs.assets.ml.models.rf_hourly import rf_hourly
 from bike_rental.defs.io_managers.csv_io import CSVIOManager
 from bike_rental.defs.io_managers.model_io import ModelIOManager
-from bike_rental.defs.resources.bike_data import BikeDataDirResource
-from bike_rental.defs.assets.ml.recipe.recipe_config import RecipeConfig
+from bike_rental.defs.resources.source import SourceDirResource
+from bike_rental.defs.assets.ml.recipes.recipe_config import RecipeConfig
 
 
 @definitions
@@ -71,7 +71,7 @@ def defs() -> Definitions:
             hourly_by_location_no_nulls,
         ],
         resources={
-            "bike_data": BikeDataDirResource(base_path=cfg.source_dir),
+            "source": SourceDirResource(base_path=cfg.source_dir),
             "io_manager": FilesystemIOManager(base_dir=cfg.dagster_storage_dir),
             "csv_io": CSVIOManager(base_dir=cfg.processed_dir),
             "quarantine_io": CSVIOManager(base_dir=cfg.quarantine_dir),

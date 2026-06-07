@@ -49,7 +49,6 @@ class RecipeConfig(dg.ConfigurableResource):
     @cached_property
     def _recipes(self) -> dict:
         path = Path(self.config_recipe_dir) / self.config_recipe_file
-        # path = self.config_recipe_dir / self.config_recipe_file
         if not path.exists():
             return _FALLBACK_RECIPES
         try:

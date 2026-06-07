@@ -1,5 +1,3 @@
-
-
 """IO manager that persists model assets as joblib files on disk."""
 
 from pathlib import Path

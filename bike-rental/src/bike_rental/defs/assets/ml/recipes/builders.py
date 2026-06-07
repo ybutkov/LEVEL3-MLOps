@@ -3,9 +3,9 @@ import pandas as pd
 from sklearn.compose import ColumnTransformer
 from sklearn.preprocessing import OneHotEncoder, StandardScaler
 
-from bike_rental.defs.assets.ml.recipe.transformers import CyclicEncoder
-from bike_rental.defs.assets.ml.recipe.schema import DatasetConfig
-from bike_rental.defs.assets.ml.training.guards import assert_no_target_leak
+from bike_rental.defs.assets.ml.recipes.transformers import CyclicEncoder
+from bike_rental.defs.assets.ml.recipes.schema import DatasetConfig
+from bike_rental.defs.assets.ml.guards import assert_no_target_leak
 
 TIME_KEY = "datetime_hourly"
 

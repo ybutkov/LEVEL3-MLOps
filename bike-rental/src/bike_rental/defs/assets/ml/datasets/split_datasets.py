@@ -1,8 +1,8 @@
 import dagster as dg
 import pandas as pd
 
-from bike_rental.defs.assets.ml.recipe.recipe_config import RecipeConfig
-from bike_rental.defs.assets.ml.training.split import DatasetSplitter
+from bike_rental.defs.assets.ml.recipes.recipe_config import RecipeConfig
+from bike_rental.defs.assets.ml.datasets.splitter import DatasetSplitter
 
 TIME_KEY = "datetime_hourly"
 

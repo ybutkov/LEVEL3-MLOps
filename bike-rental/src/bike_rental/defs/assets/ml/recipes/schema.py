@@ -3,7 +3,7 @@ from __future__ import annotations
 import dagster as dg
 from pydantic import BaseModel, Field, model_validator, ValidationError
 
-from bike_rental.defs.assets.ml.recipe.recipe_config import RecipeConfigError
+from bike_rental.defs.assets.ml.recipes.recipe_config import RecipeConfigError
 
 _REQUIRED_FIELD = {
     "select": "columns",

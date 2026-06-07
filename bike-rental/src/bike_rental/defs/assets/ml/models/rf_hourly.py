@@ -2,8 +2,8 @@ import dagster as dg
 import pandas as pd
 from sklearn.ensemble import RandomForestRegressor
 
-from bike_rental.defs.assets.ml.recipe.recipe_config import RecipeConfig
-from bike_rental.defs.assets.ml.training.train import train_and_evaluate
+from bike_rental.defs.assets.ml.recipes.recipe_config import RecipeConfig
+from bike_rental.defs.assets.ml.models.training import train_and_evaluate
 
 
 class RandomForestConfig(dg.Config):
@@ -22,18 +22,13 @@ def rf_hourly(
     config: RandomForestConfig,
 ) -> dg.MaterializeResult:
     
-    estimator = RandomForestRegressor(
-        n_estimators=config.n_estimators,
-        max_depth=config.max_depth,
-        random_state=config.random_state,
-        n_jobs=-1,   # infra, not an experiment knob -> stays out of config
-    )
-    result = train_and_evaluate(tree_dataset_hourly_train, tree_dataset_hourly_val,
+    estimator = RandomForestRegressor(**config.model_dump(), n_jobs=-1)
+    trainingResult = train_and_evaluate(tree_dataset_hourly_train, tree_dataset_hourly_val,
                                 recipe_config, "tree", estimator)
     return dg.MaterializeResult(
-        value=result.pipeline,
+        value=trainingResult.pipeline,
         metadata={
-            **result.metadata,
+            **trainingResult.metadata,
             "model_type": dg.MetadataValue.text("rf"),
             "params": dg.MetadataValue.json(config.model_dump()),
         },

@@ -1,4 +1,10 @@
-"""Resource that reads source CSV files from a base directory."""
+"""Resources for reading source CSV files.
+
+`SourceResource` is the contract (``load_csv``) the raw assets depend on;
+`SourceDirResource` is the local-directory implementation. A future
+LakeFS-backed resource can subclass `SourceResource` and be swapped in by
+binding it to the same ``source`` resource key — no asset changes needed.
+"""
 
 from pathlib import Path
 
@@ -8,8 +14,16 @@ import pandas as pd
 from bike_rental.defs.io_utils import read_csv_or_fail
 
 
-class BikeDataDirResource(dg.ConfigurableResource):
-    """Dagster resource pointing at the directory of source CSV files."""
+class SourceResource(dg.ConfigurableResource):
+    """Contract for a source-data resource: load a named CSV into a DataFrame."""
+
+    def load_csv(self, filename: str) -> pd.DataFrame:
+        """Load the named source CSV. Implemented by concrete subclasses."""
+        raise NotImplementedError
+
+
+class SourceDirResource(SourceResource):
+    """Read source CSV files from a local base directory."""
 
     base_path: str
 
