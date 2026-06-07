@@ -17,16 +17,11 @@ from bike_rental.defs.assets.data.raw import (
     registered_rentals_raw,
     weather_raw,
 )
-from bike_rental.defs.assets.data.rentals import (
-    hourly_rentals,
-    rentals_split,
-)
-from bike_rental.defs.assets.data.weather import (
-    clean_weather,
-    weather_split,
-)
+from bike_rental.defs.assets.data.rentals import hourly_rentals, rentals_split
+from bike_rental.defs.assets.data.weather import clean_weather, weather_split
 from bike_rental.defs.assets.ml.dataset_linear_hourly import linear_dataset_hourly
 from bike_rental.defs.assets.ml.dataset_tree_hourly import tree_dataset_hourly
+from bike_rental.defs.assets.ml.dataset_split import linear_dataset_splits, tree_dataset_splits
 from bike_rental.defs.assets.ml.feature import hourly_by_location, hourly_total
 from bike_rental.defs.assets.ml.model_hgb_hourly import hgb_hourly
 from bike_rental.defs.assets.ml.model_linear_hourly import linear_hourly
@@ -34,6 +29,7 @@ from bike_rental.defs.assets.ml.model_rf_hourly import rf_hourly
 from bike_rental.defs.io_managers.csv_io import CSVIOManager
 from bike_rental.defs.io_managers.model_io import ModelIOManager
 from bike_rental.defs.resources.bike_data import BikeDataDirResource
+from bike_rental.defs.assets.ml.recipe.recipe_config import RecipeConfig
 
 
 @definitions
@@ -61,6 +57,8 @@ def defs() -> Definitions:
             hourly_total,
             linear_dataset_hourly,
             tree_dataset_hourly,
+            linear_dataset_splits,
+            tree_dataset_splits,
             linear_hourly,
             rf_hourly,
             hgb_hourly,
@@ -79,5 +77,6 @@ def defs() -> Definitions:
             "quarantine_io": CSVIOManager(base_dir=cfg.quarantine_dir),
             "model_io": ModelIOManager(base_dir=cfg.models_dir),
             "base_config": AppConfig.load(),
+            "recipe_config": RecipeConfig(),
         },
     )

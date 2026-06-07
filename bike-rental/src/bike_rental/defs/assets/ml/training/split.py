@@ -10,113 +10,99 @@ import dagster as dg
 import numpy as np
 import pandas as pd
 
-from bike_rental.defs.assets.ml.recipe.loader import load_split
-
-_SPLIT = load_split()
-TRAIN_FRAC = _SPLIT["train_frac"]
-VAL_FRAC = _SPLIT["val_frac"]
+from bike_rental.defs.assets.ml.recipe.recipe_config import RecipeConfig
 
 
-def _cut_points(timestamps: np.ndarray) -> tuple:
-    """Boundary timestamps for train|val and val|test.
+class DatasetSplitter():
+    def __init__(self, recipe_config: RecipeConfig):
+        self.recipe_config = recipe_config
 
-    The val|test boundary is None when train_frac + val_frac == 1 (no test set):
-    its index would be `len(timestamps)`, i.e. past the last timestamp.
-    """
-    n = len(timestamps)
-    cut1 = timestamps[int(n * TRAIN_FRAC)]
-    i2 = int(n * (TRAIN_FRAC + VAL_FRAC))
-    cut2 = timestamps[i2] if i2 < n else None
-    return cut1, cut2
+        self.train_border = float(self.recipe_config.get_recipe("split")["train_frac"])
+        self.val_border = float(self.recipe_config.get_recipe("split")["val_frac"])
+        valid = (
+            isinstance(self.train_border, (int, float))
+            and isinstance(self.val_border, (int, float))
+            and 0 < self.train_border < 1
+            and 0 < self.val_border
+            and round(self.train_border + self.val_border, 6) <= 1
+        )
+        if not valid:
+            raise Exception(
+                "split: need 0<train_frac<1, 0<val_frac, train_frac+val_frac<=1; "
+                f"got {self.train_border, self.val_border}"
+            )
 
+    def _cut_points(self, timestamps: np.ndarray) -> tuple:
+        """Boundary timestamps for train|val and val|test.
 
-def train_validate_test_time_split(
-    df: pd.DataFrame, time_feature: str, features: list[str], target: str,
-) -> tuple[pd.DataFrame, pd.Series, pd.DataFrame, pd.Series, pd.DataFrame, pd.Series]:
-    """Split chronologically into train/val/test by unique timestamps.
+        The val|test boundary is None when train_frac + val_frac == 1 (no test set):
+        its index would be `len(timestamps)`, i.e. past the last timestamp.
+        """
+        n = len(timestamps)
+        cut1 = timestamps[int(n * self.train_border)]
+        i2 = int(n * (self.train_border + self.val_border))
+        cut2 = timestamps[i2] if i2 < n else None
+        return cut1, cut2
 
-    Rows are ordered by ``time_feature`` and cut at the global train/val
-    fractions. With no test boundary (train + val == 1), val extends to the end
-    and test is empty.
+    def split_frames(
+        self, df: pd.DataFrame, time_feature: str
+    ) -> tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]:
 
-    Parameters
-    ----------
-    df : pandas.DataFrame
-        Dataset to split; must contain ``time_feature``, ``features`` and ``target``.
-    time_feature : str
-        Column holding the timestamp used for ordering and cutting.
-    features : list of str
-        Feature columns to return as X.
-    target : str
-        Target column to return as y.
+        ds = df.sort_values(time_feature).reset_index(drop=True)
+        timestamps = np.sort(ds[time_feature].unique())
+        cut1, cut2 = self._cut_points(timestamps)
 
-    Returns
-    -------
-    tuple of pandas.DataFrame and pandas.Series
-        ``(X_train, y_train, X_val, y_val, X_test, y_test)``; the test frames are
-        empty when there is no test split.
-    """
-    ds = df.sort_values(time_feature).reset_index(drop=True)
-    timestamps = np.sort(ds[time_feature].unique())
-    cut1, cut2 = _cut_points(timestamps)
+        train = ds[ds[time_feature] < cut1]
+        if cut2 is None:
+            val = ds[ds[time_feature] >= cut1]
+            test = ds.iloc[0:0]
+        else:
+            val = ds[(ds[time_feature] >= cut1) & (ds[time_feature] < cut2)]
+            test = ds[ds[time_feature] >= cut2]
+        return train, val, test
 
-    train = ds[ds[time_feature] < cut1]
-    if cut2 is None:
-        val = ds[ds[time_feature] >= cut1]
-        test = ds.iloc[0:0]
-    else:
-        val = ds[(ds[time_feature] >= cut1) & (ds[time_feature] < cut2)]
-        test = ds[ds[time_feature] >= cut2]
+    def describe_time_split(self, df: pd.DataFrame, time_feature: str) -> dict:
+        """Build Dagster metadata describing how the chronological split was made.
 
-    X_train, y_train = train[features], train[target]
-    X_val, y_val = val[features], val[target]
-    X_test, y_test = test[features], test[target]
+        Records the strategy, boundary timestamps and per-split row counts so the
+        split is auditable from the asset's materialization in the UI.
 
-    return X_train, y_train, X_val, y_val, X_test, y_test
+        Parameters
+        ----------
+        df : pandas.DataFrame
+            The dataset being split.
+        time_feature : str
+            Column holding the timestamp used for the split.
 
+        Returns
+        -------
+        dict
+            Mapping of metadata keys to ``dagster.MetadataValue`` (strategy, train/val
+            boundaries, per-split row counts).
+        """
+        ds = df.sort_values(time_feature)
+        timestamps = np.sort(ds[time_feature].unique())
+        cut1, cut2 = self._cut_points(timestamps)
 
-def describe_time_split(df: pd.DataFrame, time_feature: str) -> dict:
-    """Build Dagster metadata describing how the chronological split was made.
+        n_train = int((ds[time_feature] < cut1).sum())
+        if cut2 is None:
+            n_val = int((ds[time_feature] >= cut1).sum())
+            n_test = 0
+            val_end = "— (no test set)"
+        else:
+            n_val = int(((ds[time_feature] >= cut1) & (ds[time_feature] < cut2)).sum())
+            n_test = int((ds[time_feature] >= cut2).sum())
+            val_end = str(cut2)
+        test_frac = max(0.0, round(1 - self.train_border - self.val_border, 4))
 
-    Records the strategy, boundary timestamps and per-split row counts so the
-    split is auditable from the asset's materialization in the UI.
-
-    Parameters
-    ----------
-    df : pandas.DataFrame
-        The dataset being split.
-    time_feature : str
-        Column holding the timestamp used for the split.
-
-    Returns
-    -------
-    dict
-        Mapping of metadata keys to ``dagster.MetadataValue`` (strategy, train/val
-        boundaries, per-split row counts).
-    """
-    ds = df.sort_values(time_feature)
-    timestamps = np.sort(ds[time_feature].unique())
-    cut1, cut2 = _cut_points(timestamps)
-
-    n_train = int((ds[time_feature] < cut1).sum())
-    if cut2 is None:
-        n_val = int((ds[time_feature] >= cut1).sum())
-        n_test = 0
-        val_end = "— (no test set)"
-    else:
-        n_val = int(((ds[time_feature] >= cut1) & (ds[time_feature] < cut2)).sum())
-        n_test = int((ds[time_feature] >= cut2).sum())
-        val_end = str(cut2)
-    test_frac = max(0.0, round(1 - TRAIN_FRAC - VAL_FRAC, 4))
-
-    return {
-        "split_strategy": dg.MetadataValue.text(
-            f"chronological {TRAIN_FRAC:.0%}/{VAL_FRAC:.0%}/{test_frac:.0%} "
-            f"by unique {time_feature}"
-        ),
-        "split_train_end": dg.MetadataValue.text(str(cut1)),
-        "split_val_end": dg.MetadataValue.text(val_end),
-        "split_rows": dg.MetadataValue.text(
-            f"train={n_train}, val={n_val}, test={n_test}"
-        ),
-    }
+        return {
+            "split_strategy": dg.MetadataValue.text(
+                f"chronological {self.train_border:.0%}/{self.val_border:.0%}/{test_frac:.0%} "
+                f"by unique {time_feature}"
+            ),
+            "split_train_end": dg.MetadataValue.text(str(cut1)),
+            "split_val_end": dg.MetadataValue.text(val_end),
+            "split_rows": dg.MetadataValue.text(
+                f"train={n_train}, val={n_val}, test={n_test}"
+            ),
+        }
