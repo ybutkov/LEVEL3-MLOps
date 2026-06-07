@@ -1,11 +1,11 @@
-"""ML feature assets: the final dataset."""
+"""ML assets: base datasets, per-model datasets/splits, and trained models."""
 
-from bike_rental.defs.assets.ml.dataset_linear_hourly import linear_dataset_hourly
-from bike_rental.defs.assets.ml.dataset_tree_hourly import tree_dataset_hourly
-from bike_rental.defs.assets.ml.feature import hourly_by_location, hourly_total
-from bike_rental.defs.assets.ml.model_hgb_hourly import hgb_hourly
-from bike_rental.defs.assets.ml.model_linear_hourly import linear_hourly
-from bike_rental.defs.assets.ml.model_rf_hourly import rf_hourly
+from bike_rental.defs.assets.ml.base_dataset import hourly_by_location, hourly_total
+from bike_rental.defs.assets.ml.datasets.linear_hourly import linear_dataset_hourly
+from bike_rental.defs.assets.ml.datasets.tree_hourly import tree_dataset_hourly
+from bike_rental.defs.assets.ml.models.hgb_hourly import hgb_hourly
+from bike_rental.defs.assets.ml.models.linear_hourly import linear_hourly
+from bike_rental.defs.assets.ml.models.rf_hourly import rf_hourly
 
 __all__ = [
     "hourly_by_location",

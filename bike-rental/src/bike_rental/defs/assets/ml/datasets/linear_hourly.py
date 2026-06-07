@@ -1,8 +1,7 @@
 import dagster as dg
 import pandas as pd
-from pydantic import Field
 
-from bike_rental.defs.assets.ml.recipe.apply import build_dataset
+from bike_rental.defs.assets.ml.recipe.builders import build_dataset
 from bike_rental.defs.assets.ml.recipe.recipe_config import RecipeConfig
 from bike_rental.defs.assets.ml.recipe.schema import DatasetConfig
 

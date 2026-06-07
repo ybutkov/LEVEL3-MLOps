@@ -19,13 +19,13 @@ from bike_rental.defs.assets.data.raw import (
 )
 from bike_rental.defs.assets.data.rentals import hourly_rentals, rentals_split
 from bike_rental.defs.assets.data.weather import clean_weather, weather_split
-from bike_rental.defs.assets.ml.dataset_linear_hourly import linear_dataset_hourly
-from bike_rental.defs.assets.ml.dataset_tree_hourly import tree_dataset_hourly
-from bike_rental.defs.assets.ml.dataset_split import linear_dataset_splits, tree_dataset_splits
-from bike_rental.defs.assets.ml.feature import hourly_by_location, hourly_total
-from bike_rental.defs.assets.ml.model_hgb_hourly import hgb_hourly
-from bike_rental.defs.assets.ml.model_linear_hourly import linear_hourly
-from bike_rental.defs.assets.ml.model_rf_hourly import rf_hourly
+from bike_rental.defs.assets.ml.base_dataset import hourly_by_location, hourly_total
+from bike_rental.defs.assets.ml.datasets.linear_hourly import linear_dataset_hourly
+from bike_rental.defs.assets.ml.datasets.tree_hourly import tree_dataset_hourly
+from bike_rental.defs.assets.ml.datasets.splits import linear_dataset_splits, tree_dataset_splits
+from bike_rental.defs.assets.ml.models.hgb_hourly import hgb_hourly
+from bike_rental.defs.assets.ml.models.linear_hourly import linear_hourly
+from bike_rental.defs.assets.ml.models.rf_hourly import rf_hourly
 from bike_rental.defs.io_managers.csv_io import CSVIOManager
 from bike_rental.defs.io_managers.model_io import ModelIOManager
 from bike_rental.defs.resources.bike_data import BikeDataDirResource

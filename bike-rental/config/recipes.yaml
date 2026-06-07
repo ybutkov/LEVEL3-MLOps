@@ -1,6 +1,6 @@
-split:                   # global train/val/test fractions (one setting for all models)
+split:
   train_frac: 0.70
-  val_frac: 0.15          # test = remaining 0.15; set val_frac so train+val==1 for no test
+  val_frac: 0.15
 
 linear:
   target: total_rentals
@@ -21,7 +21,7 @@ linear:
                 total_rentals]
     - kind: cyclic
       periods: {hour_of_day: 24, month: 12, day_of_week: 7}
-    - kind: scale            # stateful: fit on train in the model, after the split
+    - kind: scale
       columns: [
                 conditions,
                 temperature_c,

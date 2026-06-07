@@ -12,10 +12,6 @@ _REQUIRED_FIELD = {
     "one_hot": "columns",
 }
 
-_STATELESS_KINDS = {"select", "cyclic"}
-_STATEFUL_KINDS = {"scale", "one_hot"}
-assert _STATELESS_KINDS | _STATEFUL_KINDS == set(_REQUIRED_FIELD)
-
 
 class DatasetStep(BaseModel):
 

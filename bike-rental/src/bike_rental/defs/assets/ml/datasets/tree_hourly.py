@@ -1,10 +1,9 @@
 import dagster as dg
 import pandas as pd
-from pydantic import Field
 
-from bike_rental.defs.assets.ml.recipe.apply import build_dataset
+from bike_rental.defs.assets.ml.recipe.builders import build_dataset
 from bike_rental.defs.assets.ml.recipe.recipe_config import RecipeConfig
-from bike_rental.defs.assets.ml.recipe.schema import DatasetConfig, DatasetStep
+from bike_rental.defs.assets.ml.recipe.schema import DatasetConfig
 
 
 @dg.asset(group_name="model_datasets", io_manager_key="csv_io", kinds={"pandas"})

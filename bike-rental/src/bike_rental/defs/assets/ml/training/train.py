@@ -9,7 +9,7 @@ from sklearn.pipeline import Pipeline
 
 from bike_rental.defs.assets.ml.recipe.recipe_config import RecipeConfig
 from bike_rental.defs.assets.ml.recipe.schema import DatasetConfig
-from bike_rental.defs.assets.ml.recipe.apply import assert_recipe_columns, build_preprocessor
+from bike_rental.defs.assets.ml.recipe.builders import assert_recipe_columns, build_preprocessor
 from bike_rental.defs.assets.ml.training.guards import assert_no_target_leak
 
 TIME_KEY = "datetime_hourly"
