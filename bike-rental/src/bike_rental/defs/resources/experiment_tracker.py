@@ -16,6 +16,8 @@ from sklearn.pipeline import Pipeline
 import mlflow
 import mlflow.sklearn
 from mlflow.models import infer_signature
+from mlflow.tracking import MlflowClient
+from mlflow.exceptions import MlflowException
 
 from bike_rental.defs.assets.ml.registry import Candidate
 
@@ -86,9 +88,6 @@ class MlflowExperimentTracker(ExperimentTracker):
     champion_alias: str = "champion"
 
     def _client(self):
-        import mlflow
-        from mlflow.tracking import MlflowClient
-
         mlflow.set_tracking_uri(self.tracking_uri)
         return MlflowClient()
 
@@ -131,7 +130,6 @@ class MlflowExperimentTracker(ExperimentTracker):
         )
 
     def load_champion(self) -> Candidate | None:
-        from mlflow.exceptions import MlflowException
 
         client = self._client()
         try:

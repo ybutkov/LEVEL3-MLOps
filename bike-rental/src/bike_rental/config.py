@@ -29,7 +29,6 @@ class Layout(BaseModel):
     source: str
     processed: str
     quarantine: str
-    models: str
 
 
 class MlflowSettings(BaseModel):
@@ -96,11 +95,6 @@ class AppConfig(BaseModel):
     def quarantine_dir(self) -> str:
         """Absolute path to the quarantine output directory."""
         return self._path(self.data_root, self.layout.quarantine)
-
-    @property
-    def models_dir(self) -> str:
-        """Absolute path to the models directory."""
-        return self._path(self.data_root, self.layout.models)
 
     @property
     def dagster_storage_dir(self) -> str:
