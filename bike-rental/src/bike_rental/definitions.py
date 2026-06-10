@@ -1,6 +1,6 @@
 """Dagster Definitions: wires assets, checks, resources, and IO managers."""
 
-from dagster import Definitions, FilesystemIOManager, definitions
+from dagster import Definitions, EnvVar, FilesystemIOManager, definitions
 
 from bike_rental.config import AppConfig
 from bike_rental.defs.asset_checks.contracts import (
@@ -23,12 +23,14 @@ from bike_rental.defs.assets.ml.base_dataset import hourly_by_location, hourly_t
 from bike_rental.defs.assets.ml.datasets.linear_hourly import linear_dataset_hourly
 from bike_rental.defs.assets.ml.datasets.tree_hourly import tree_dataset_hourly
 from bike_rental.defs.assets.ml.datasets.split_datasets import linear_dataset_splits, tree_dataset_splits
+from bike_rental.defs.assets.ml.datasets.data_commit import data_commit
 from bike_rental.defs.assets.ml.models.hgb_hourly import hgb_hourly
 from bike_rental.defs.assets.ml.models.linear_hourly import linear_hourly
 from bike_rental.defs.assets.ml.models.rf_hourly import rf_hourly
 from bike_rental.defs.assets.ml.models.promotion import champion
 from bike_rental.defs.io_managers.csv_io import CSVIOManager
-from bike_rental.defs.resources.source import SourceDirResource
+from bike_rental.defs.resources.source import LakeFSSourceResource
+from bike_rental.defs.resources.lakefs import LakeFSVersioningResource
 from bike_rental.defs.resources.experiment import ExperimentConfig
 from bike_rental.defs.resources.experiment_tracker import MlflowExperimentTracker
 from bike_rental.defs.assets.ml.recipes.recipe_config import RecipeConfig
@@ -61,6 +63,7 @@ def defs() -> Definitions:
             tree_dataset_hourly,
             linear_dataset_splits,
             tree_dataset_splits,
+            data_commit,
             linear_hourly,
             rf_hourly,
             hgb_hourly,
@@ -74,7 +77,20 @@ def defs() -> Definitions:
             hourly_by_location_no_nulls,
         ],
         resources={
-            "source": SourceDirResource(base_path=cfg.source_dir),
+            "source": LakeFSSourceResource(
+                host=cfg.lakefs.host,
+                repo=cfg.lakefs.repo,
+                ref=cfg.lakefs.ref,
+                raw_prefix=cfg.lakefs.raw_prefix,
+                access_key=EnvVar("LAKEFS_ACCESS_KEY"),
+                secret_key=EnvVar("LAKEFS_SECRET_KEY"),
+            ),
+            "lakefs": LakeFSVersioningResource(
+                host=cfg.lakefs.host,
+                repo=cfg.lakefs.repo,
+                access_key=EnvVar("LAKEFS_ACCESS_KEY"),
+                secret_key=EnvVar("LAKEFS_SECRET_KEY"),
+            ),
             "io_manager": FilesystemIOManager(base_dir=cfg.dagster_storage_dir),
             "csv_io": CSVIOManager(base_dir=cfg.processed_dir),
             "quarantine_io": CSVIOManager(base_dir=cfg.quarantine_dir),

@@ -39,6 +39,16 @@ class MlflowSettings(BaseModel):
     registered_model: str
 
 
+class LakeFSSettings(BaseModel):
+    """LakeFS source settings (non-secret); credentials come from env vars."""
+
+    host: str
+    repo: str
+    ref: str = "main"
+    raw_prefix: str = "raw"
+    ingest_branch: str = "ingest"
+
+
 class AppConfig(BaseModel):
     """Typed pipeline config: per-stand roots + shared layout, resolved to paths.
 
@@ -51,6 +61,7 @@ class AppConfig(BaseModel):
     dagster_dir: str
     layout: Layout
     mlflow: MlflowSettings
+    lakefs: LakeFSSettings
 
     @classmethod
     def load(cls) -> Self:

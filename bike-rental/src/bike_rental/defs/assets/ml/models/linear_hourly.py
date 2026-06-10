@@ -8,6 +8,7 @@ from bike_rental.defs.assets.ml.models.catalog import build_estimator, recipe_na
 from bike_rental.defs.resources.experiment import ExperimentConfig
 from bike_rental.defs.resources.experiment_tracker import ExperimentTracker
 from bike_rental.defs.assets.ml.registry import Candidate
+from bike_rental.defs.utils.git_operations import get_git_commit
 
 
 class LinearModelConfig(dg.Config):
@@ -24,6 +25,7 @@ def linear_hourly(
     recipe_config: RecipeConfig,
     experiment_config: ExperimentConfig,
     experiment_tracker: ExperimentTracker,
+    data_commit: str,
     config: LinearModelConfig,
 ) -> dg.MaterializeResult:
     model_type = "linear"
@@ -42,7 +44,9 @@ def linear_hourly(
         X_example=linear_dataset_hourly_train[trainingResult.features].head(),
         tags={"model_type": model_type,
               "recipe": recipe_name_for(model_type),
-              "dagster_run_id": context.run_id
+              "dagster_run_id": context.run_id,
+              "data_commit": data_commit,
+              "git_commit": get_git_commit(),
         },
     )
     candidate = Candidate(
