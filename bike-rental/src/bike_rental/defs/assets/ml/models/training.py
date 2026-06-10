@@ -7,13 +7,13 @@ from sklearn.base import BaseEstimator
 from sklearn.metrics import mean_absolute_error, mean_squared_error, r2_score
 from sklearn.pipeline import Pipeline
 
-from bike_rental.defs.assets.ml.recipes.recipe_config import RecipeConfig
 from bike_rental.defs.assets.ml.recipes.schema import DatasetConfig
 from bike_rental.defs.assets.ml.recipes.builders import (
     assert_recipe_columns,
     build_preprocessor,
     restrict_to_features,
 )
+from bike_rental.defs.assets.ml.models.wrappers import NonNegativeRegressor
 from bike_rental.defs.assets.ml.guards import assert_no_target_leak
 
 TIME_KEY = "datetime_hourly"
@@ -26,6 +26,7 @@ class TrainingResult:
     pipeline: Pipeline
     metrics: dict[str, float]
     metadata: dict
+    features: list[str]
 
 def regression_metrics(y_true, y_pred) -> dict[str, float]:
     rmse = float(np.sqrt(mean_squared_error(y_true, y_pred)))
@@ -42,14 +43,11 @@ def regression_metrics(y_true, y_pred) -> dict[str, float]:
 def train_and_evaluate(
     train_df: pd.DataFrame,
     val_df: pd.DataFrame,
-    recipe_config: RecipeConfig,
-    recipe_name: str,
+    dataset_config: DatasetConfig,
     estimator: BaseEstimator,
     features: list[str],
 ) -> TrainingResult:
 
-    # Send dataset_config instead recipe_config, recipe_name ?
-    dataset_config = DatasetConfig.from_recipe(recipe_config, recipe_name)
     target = dataset_config.target
 
     # dataset is full feature table; keep only requested features
@@ -61,11 +59,11 @@ def train_and_evaluate(
     assert_no_target_leak(features, target)
     assert_recipe_columns(dataset_config, train_df.columns)
 
-    pipe = Pipeline([("pre", build_preprocessor(dataset_config)), ("model", estimator)])
+    pipe = Pipeline([("pre", build_preprocessor(dataset_config)), ("model", NonNegativeRegressor(estimator))])
     pipe.fit(train_df[features], train_df[target])
-    val_pred = np.clip(pipe.predict(val_df[features]), 0, None)
+    val_pred = pipe.predict(val_df[features])
 
     metrics = regression_metrics(val_df[target], val_pred)
     metadata = {k: dg.MetadataValue.float(v) for k, v in metrics.items()}
 
-    return TrainingResult(pipeline=pipe, metrics=metrics, metadata=metadata)
+    return TrainingResult(pipeline=pipe, metrics=metrics, metadata=metadata, features=features)

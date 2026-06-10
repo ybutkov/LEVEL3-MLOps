@@ -26,10 +26,11 @@ from bike_rental.defs.assets.ml.datasets.split_datasets import linear_dataset_sp
 from bike_rental.defs.assets.ml.models.hgb_hourly import hgb_hourly
 from bike_rental.defs.assets.ml.models.linear_hourly import linear_hourly
 from bike_rental.defs.assets.ml.models.rf_hourly import rf_hourly
+from bike_rental.defs.assets.ml.models.promotion import champion
 from bike_rental.defs.io_managers.csv_io import CSVIOManager
-from bike_rental.defs.io_managers.model_io import ModelIOManager
 from bike_rental.defs.resources.source import SourceDirResource
 from bike_rental.defs.resources.experiment import ExperimentConfig
+from bike_rental.defs.resources.experiment_tracker import MlflowExperimentTracker
 from bike_rental.defs.assets.ml.recipes.recipe_config import RecipeConfig
 
 
@@ -63,6 +64,7 @@ def defs() -> Definitions:
             linear_hourly,
             rf_hourly,
             hgb_hourly,
+            champion,
         ],
         asset_checks=[
             registered_rentals_raw_contract,
@@ -76,9 +78,13 @@ def defs() -> Definitions:
             "io_manager": FilesystemIOManager(base_dir=cfg.dagster_storage_dir),
             "csv_io": CSVIOManager(base_dir=cfg.processed_dir),
             "quarantine_io": CSVIOManager(base_dir=cfg.quarantine_dir),
-            "model_io": ModelIOManager(base_dir=cfg.models_dir),
             "base_config": AppConfig.load(),
             "recipe_config": RecipeConfig(),
             "experiment_config": ExperimentConfig(),
+            "experiment_tracker": MlflowExperimentTracker(
+                tracking_uri=cfg.mlflow.tracking_uri,
+                experiment_name=cfg.mlflow.experiment_name,
+                registered_model=cfg.mlflow.registered_model,
+            ),
         },
     )

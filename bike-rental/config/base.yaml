@@ -4,3 +4,12 @@ layout:
   processed:  processed
   quarantine: quarantine
   models:     models
+
+# MLflow tracking/registry. 
+# tracking_uri
+# experiment/model names 
+# defaults to the shared stand and can be overridden per {stand}.yaml.
+mlflow:
+  tracking_uri:     http://161.97.89.177:5000
+  experiment_name:  hourly_rental_demand
+  registered_model: total_rentals_regressor

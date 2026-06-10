@@ -32,6 +32,14 @@ class Layout(BaseModel):
     models: str
 
 
+class MlflowSettings(BaseModel):
+    """MLflow tracking/registry settings; ``tracking_uri`` is stand-specific."""
+
+    tracking_uri: str
+    experiment_name: str
+    registered_model: str
+
+
 class AppConfig(BaseModel):
     """Typed pipeline config: per-stand roots + shared layout, resolved to paths.
 
@@ -43,6 +51,7 @@ class AppConfig(BaseModel):
     data_root: str
     dagster_dir: str
     layout: Layout
+    mlflow: MlflowSettings
 
     @classmethod
     def load(cls) -> Self:
