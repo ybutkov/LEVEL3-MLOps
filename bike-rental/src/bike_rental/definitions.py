@@ -29,6 +29,7 @@ from bike_rental.defs.assets.ml.models.rf_hourly import rf_hourly
 from bike_rental.defs.io_managers.csv_io import CSVIOManager
 from bike_rental.defs.io_managers.model_io import ModelIOManager
 from bike_rental.defs.resources.source import SourceDirResource
+from bike_rental.defs.resources.experiment import ExperimentConfig
 from bike_rental.defs.assets.ml.recipes.recipe_config import RecipeConfig
 
 
@@ -78,5 +79,6 @@ def defs() -> Definitions:
             "model_io": ModelIOManager(base_dir=cfg.models_dir),
             "base_config": AppConfig.load(),
             "recipe_config": RecipeConfig(),
+            "experiment_config": ExperimentConfig(),
         },
     )

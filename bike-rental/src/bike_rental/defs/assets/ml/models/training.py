@@ -9,7 +9,11 @@ from sklearn.pipeline import Pipeline
 
 from bike_rental.defs.assets.ml.recipes.recipe_config import RecipeConfig
 from bike_rental.defs.assets.ml.recipes.schema import DatasetConfig
-from bike_rental.defs.assets.ml.recipes.builders import assert_recipe_columns, build_preprocessor
+from bike_rental.defs.assets.ml.recipes.builders import (
+    assert_recipe_columns,
+    build_preprocessor,
+    restrict_to_features,
+)
 from bike_rental.defs.assets.ml.guards import assert_no_target_leak
 
 TIME_KEY = "datetime_hourly"
@@ -41,11 +45,18 @@ def train_and_evaluate(
     recipe_config: RecipeConfig,
     recipe_name: str,
     estimator: BaseEstimator,
+    features: list[str],
 ) -> TrainingResult:
-    
+
+    # Send dataset_config instead recipe_config, recipe_name ?
     dataset_config = DatasetConfig.from_recipe(recipe_config, recipe_name)
     target = dataset_config.target
-    features = [c for c in train_df.columns if c not in (target, TIME_KEY)]
+
+    # dataset is full feature table; keep only requested features
+    # that are actually present (drop rest silently)
+    features = [c for c in features if c in train_df.columns and c not in (target, TIME_KEY)]
+
+    dataset_config = restrict_to_features(dataset_config, features)
 
     assert_no_target_leak(features, target)
     assert_recipe_columns(dataset_config, train_df.columns)
