@@ -10,15 +10,14 @@ binding it to the ``experiment_tracker`` resource key — no asset changes neede
 from dataclasses import dataclass
 
 import dagster as dg
-import pandas as pd
-from sklearn.pipeline import Pipeline
-
 import mlflow
 import mlflow.data
 import mlflow.sklearn
+import pandas as pd
+from mlflow.exceptions import MlflowException
 from mlflow.models import infer_signature
 from mlflow.tracking import MlflowClient
-from mlflow.exceptions import MlflowException
+from sklearn.pipeline import Pipeline
 
 from bike_rental.defs.assets.ml.registry import Candidate
 
@@ -66,11 +65,15 @@ class ExperimentTracker(dg.ConfigurableResource):
         raise NotImplementedError
 
     def load_champion(self) -> Candidate | None:
-        """The version currently under the champion alias, or ``None`` if unset."""
+        """Return the version currently under the champion alias, or ``None`` if unset."""
         raise NotImplementedError
 
     def set_champion(self, version: str) -> None:
         """Point the champion alias at ``version`` (the promotion write)."""
+        raise NotImplementedError
+
+    def set_production(self, version: str) -> None:
+        """Point the production (served) alias at ``version`` — what the API loads."""
         raise NotImplementedError
 
 
@@ -90,13 +93,16 @@ class MlflowExperimentTracker(ExperimentTracker):
     registered_model : str
         Registry model name new versions are logged under.
     champion_alias : str, default="champion"
-        Registry alias marking the served model.
+        Registry alias marking the internal best model (the promotion incumbent).
+    production_alias : str, default="production"
+        Registry alias the serving API loads; moves together with the champion.
     """
 
     tracking_uri: str
     experiment_name: str
     registered_model: str
     champion_alias: str = "champion"
+    production_alias: str = "production"
 
     def _client(self):
         mlflow.set_tracking_uri(self.tracking_uri)
@@ -115,7 +121,7 @@ class MlflowExperimentTracker(ExperimentTracker):
         dataset_name: str,
         tags: dict[str, str] | None = None,
     ) -> LoggedRun:
-
+        """Log params, metrics, the input dataset, and register the pipeline to MLflow."""
         mlflow.set_tracking_uri(self.tracking_uri)
         mlflow.set_experiment(self.experiment_name)
         with mlflow.start_run(run_name=run_name) as run:
@@ -152,7 +158,7 @@ class MlflowExperimentTracker(ExperimentTracker):
         )
 
     def load_champion(self) -> Candidate | None:
-
+        """Read the champion alias from the registry (``None`` if unset)."""
         client = self._client()
         try:
             champion = client.get_model_version_by_alias(self.registered_model, self.champion_alias)
@@ -161,4 +167,13 @@ class MlflowExperimentTracker(ExperimentTracker):
         return self._candidate_from_version(client, champion)
 
     def set_champion(self, version: str) -> None:
-        self._client().set_registered_model_alias(self.registered_model, self.champion_alias, version)
+        """Point the champion alias at ``version``."""
+        self._client().set_registered_model_alias(
+            self.registered_model, self.champion_alias, version
+        )
+
+    def set_production(self, version: str) -> None:
+        """Point the production alias at ``version``."""
+        self._client().set_registered_model_alias(
+            self.registered_model, self.production_alias, version
+        )

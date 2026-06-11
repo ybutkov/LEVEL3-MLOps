@@ -31,6 +31,7 @@ def champion(
     experiment_tracker: ExperimentTracker,
     config: PromotionConfig,
 ) -> dg.MaterializeResult:
+    """Promote the best challenger to champion/production if it beats the incumbent."""
     promotion_policy = PromotionPolicy(
         metric=config.metric,
         higher_is_better=config.higher_is_better,
@@ -40,18 +41,29 @@ def champion(
     challenger = promotion_policy.best(candidates)
     incumbent_champion = experiment_tracker.load_champion()
 
+    def promote(version: str) -> None:
+        # champion = the new incumbent (next comparison); production = what the API serves
+        experiment_tracker.set_champion(version)
+        experiment_tracker.set_production(version)
+
     if incumbent_champion is None:
-        experiment_tracker.set_champion(challenger.version)
+        promote(challenger.version)
         decision, detail = "bootstrap", f"champion set to v{challenger.version}"
     else:
         won, delta = promotion_policy.is_better(challenger, incumbent_champion)
         if won:
-            experiment_tracker.set_champion(challenger.version)
+            promote(challenger.version)
             decision = "promoted"
-            detail = f"v{challenger.version} over v{incumbent_champion.version} (Δ{promotion_policy.metric}={delta:+.4f})"
+            detail = (
+                f"v{challenger.version} over v{incumbent_champion.version} "
+                f"(Δ{promotion_policy.metric}={delta:+.4f})"
+            )
         else:
             decision = "kept"
-            detail = f"champion v{incumbent_champion.version} (Δ{promotion_policy.metric}={delta:+.4f} ≤ margin {promotion_policy.margin})"
+            detail = (
+                f"champion v{incumbent_champion.version} "
+                f"(Δ{promotion_policy.metric}={delta:+.4f} ≤ margin {promotion_policy.margin})"
+            )
 
     return dg.MaterializeResult(
         metadata={
