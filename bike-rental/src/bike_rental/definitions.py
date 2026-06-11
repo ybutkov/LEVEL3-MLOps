@@ -24,9 +24,7 @@ from bike_rental.defs.assets.ml.datasets.linear_hourly import linear_dataset_hou
 from bike_rental.defs.assets.ml.datasets.tree_hourly import tree_dataset_hourly
 from bike_rental.defs.assets.ml.datasets.split_datasets import linear_dataset_splits, tree_dataset_splits
 from bike_rental.defs.assets.ml.datasets.data_commit import data_commit
-from bike_rental.defs.assets.ml.models.hgb_hourly import hgb_hourly
-from bike_rental.defs.assets.ml.models.linear_hourly import linear_hourly
-from bike_rental.defs.assets.ml.models.rf_hourly import rf_hourly
+from bike_rental.defs.assets.ml.models.hourly_models import hgb_hourly, linear_hourly, rf_hourly
 from bike_rental.defs.assets.ml.models.promotion import champion
 from bike_rental.defs.io_managers.csv_io import CSVIOManager
 from bike_rental.defs.resources.source import LakeFSSourceResource
@@ -80,7 +78,7 @@ def defs() -> Definitions:
             "source": LakeFSSourceResource(
                 host=cfg.lakefs.host,
                 repo=cfg.lakefs.repo,
-                ref=cfg.lakefs.ref,
+                ref=cfg.lakefs.read_ref,
                 raw_prefix=cfg.lakefs.raw_prefix,
                 access_key=EnvVar("LAKEFS_ACCESS_KEY"),
                 secret_key=EnvVar("LAKEFS_SECRET_KEY"),
@@ -88,6 +86,7 @@ def defs() -> Definitions:
             "lakefs": LakeFSVersioningResource(
                 host=cfg.lakefs.host,
                 repo=cfg.lakefs.repo,
+                merge_into=cfg.lakefs.merge_into,
                 access_key=EnvVar("LAKEFS_ACCESS_KEY"),
                 secret_key=EnvVar("LAKEFS_SECRET_KEY"),
             ),

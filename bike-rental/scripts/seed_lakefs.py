@@ -1,9 +1,9 @@
 """Seed raw CSVs into LakeFS through a validated ingest branch (run once).
 
-Demonstrates the branching strategy that protects ``main``: new raw data lands on
-the ``ingest`` branch, is validated against the same Pandera schemas the pipeline
-uses, and is merged into ``main`` only if every file passes — so bad data never
-reaches ``main``. Re-run whenever the raw files change.
+Demonstrates the branching strategy that protects the trunk (``merge_into``): new
+raw data lands on the ``ingest`` branch, is validated against the same Pandera
+schemas the pipeline uses, and is merged into the trunk only if every file passes
+— so bad data never reaches the trunk. Re-run whenever the raw files change.
 
 Credentials come from ``LAKEFS_ACCESS_KEY`` / ``LAKEFS_SECRET_KEY`` — put them in a
 ``.env`` (auto-loaded, gitignored) or export them. Usage::
@@ -33,7 +33,7 @@ FILES = {
 
 
 def main() -> None:
-    load_dotenv()  # read LAKEFS_* from .env (same file Dagster auto-loads)
+    load_dotenv()
     cfg = AppConfig.load()
     client = Client(
         host=cfg.lakefs.host,
@@ -45,10 +45,10 @@ def main() -> None:
     prefix = cfg.lakefs.raw_prefix
     ingest = cfg.lakefs.ingest_branch
 
-    # 1. ingest branch off main (quarantine zone for incoming data)
-    branch = repo.branch(ingest).create(source_reference=cfg.lakefs.ref, exist_ok=True)
+    # 1. ingest branch off the trunk (quarantine zone for incoming new data)
+    branch = repo.branch(ingest).create(source_reference=cfg.lakefs.merge_into, exist_ok=True)
 
-    # 2. upload local raw onto the ingest branch and commit
+    # 2. upload local raw onto the {ingest} branch and commit
     for filename in FILES:
         branch.object(f"{prefix}/{filename}").upload(
             (src_dir / filename).read_bytes(), pre_sign=False
@@ -56,16 +56,16 @@ def main() -> None:
     commit = branch.commit(message="ingest raw batch")
     print(f"ingest commit: {commit.id}")
 
-    # 3. validate what landed on ingest; a failure raises -> no merge -> main stays clean
+    # 3. validate what landed on ingest; a failure -> no merge -> trunk - clean
     for filename, schema in FILES.items():
         data = branch.object(f"{prefix}/{filename}").reader(pre_sign=False).read()
         df = pd.read_csv(io.BytesIO(data))
         schema.validate(df, lazy=True)
         print(f"validated {filename}: {len(df)} rows")
 
-    # 4. all passed -> merge ingest into main
-    merge_commit = repo.branch(ingest).merge_into(cfg.lakefs.ref)
-    print(f"merged {ingest} -> {cfg.lakefs.ref}: {merge_commit}")
+    # 4. all passed -> merge ingest into the trunk
+    merge_commit = repo.branch(ingest).merge_into(cfg.lakefs.merge_into)
+    print(f"merged {ingest} -> {cfg.lakefs.merge_into}: {merge_commit}")
 
 
 if __name__ == "__main__":

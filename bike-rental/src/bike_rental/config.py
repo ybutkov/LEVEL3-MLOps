@@ -44,7 +44,8 @@ class LakeFSSettings(BaseModel):
 
     host: str
     repo: str
-    ref: str = "main"
+    read_ref: str = "main"
+    merge_into: str = "main"
     raw_prefix: str = "raw"
     ingest_branch: str = "ingest"
 

@@ -32,11 +32,11 @@ def main() -> None:
         username=os.environ["LAKEFS_ACCESS_KEY"],
         password=os.environ["LAKEFS_SECRET_KEY"],
     )
-    branch = lakefs.Repository(cfg.lakefs.repo, client=client).branch(cfg.lakefs.ref)
+    branch = lakefs.Repository(cfg.lakefs.repo, client=client).branch(cfg.lakefs.merge_into)
 
     paths = [obj.path for obj in branch.objects(prefix=PRUNE_PREFIX)]
     if not paths:
-        print(f"nothing to clean under {PRUNE_PREFIX!r} on {cfg.lakefs.ref}")
+        print(f"nothing to clean under {PRUNE_PREFIX!r} on {cfg.lakefs.merge_into}")
         return
 
     branch.delete_objects(paths)

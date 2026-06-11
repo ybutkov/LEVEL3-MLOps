@@ -14,10 +14,11 @@ mlflow:
   registered_model: total_rentals_regressor
 
 # LakeFS source (non-secret). host is stand-specific; credentials via env
-# (LAKEFS_ACCESS_KEY / LAKEFS_SECRET_KEY).
+# (LAKEFS_ACCESS_KEY / LAKEFS_SECRET_KEY)
 lakefs:
   host:          http://161.97.89.177:8000
   repo:          bike-rental
-  ref:           main
+  read_ref:      main        # pipeline reads raw from here (pinnable to a commit/tag)
+  merge_into:    main        # writable trunk: ingest + dataset snapshots merge here
   raw_prefix:    raw
   ingest_branch: ingest

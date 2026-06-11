@@ -14,6 +14,7 @@ import pandas as pd
 from sklearn.pipeline import Pipeline
 
 import mlflow
+import mlflow.data
 import mlflow.sklearn
 from mlflow.models import infer_signature
 from mlflow.tracking import MlflowClient
@@ -48,10 +49,20 @@ class ExperimentTracker(dg.ConfigurableResource):
         params: dict,
         metrics: dict[str, float],
         pipeline: Pipeline,
-        X_example: pd.DataFrame,
+        train_df: pd.DataFrame,
+        target: str,
+        data_source: str,
+        dataset_name: str,
         tags: dict[str, str] | None = None,
     ) -> LoggedRun:
-        """Record one training run. Implemented by concrete subclasses."""
+        """Record one training run. Implemented by concrete subclasses.
+
+        ``train_df`` is the active feature columns plus the ``target`` column;
+        it is logged as the run's input dataset (its schema captures *which*
+        columns were active, its digest captures the data) and its feature
+        columns drive the model signature. ``data_source`` is the LakeFS commit
+        id the data came from; ``dataset_name`` names the dataset in MLflow.
+        """
         raise NotImplementedError
 
     def load_champion(self) -> Candidate | None:
@@ -98,7 +109,10 @@ class MlflowExperimentTracker(ExperimentTracker):
         params: dict,
         metrics: dict[str, float],
         pipeline: Pipeline,
-        X_example: pd.DataFrame,
+        train_df: pd.DataFrame,
+        target: str,
+        data_source: str,
+        dataset_name: str,
         tags: dict[str, str] | None = None,
     ) -> LoggedRun:
 
@@ -109,34 +123,42 @@ class MlflowExperimentTracker(ExperimentTracker):
                 mlflow.set_tags(tags)
             mlflow.log_params(params)
             # MLflow metric keys disallow '/': rmse/mae -> rmse_mae
+            # TODO Should write keys rmse_mae instead of rmse/mae
             mlflow.log_metrics({k.replace("/", "_"): v for k, v in metrics.items()})
-            signature = infer_signature(X_example, pipeline.predict(X_example))
+            # Record the training data as the run's input dataset: schema = active
+            # feature set (+ target), digest = content, source = LakeFS commit id.
+            dataset = mlflow.data.from_pandas(
+                train_df, source=data_source, targets=target, name=dataset_name
+            )
+            mlflow.log_input(dataset, context="training")
+            example = train_df.drop(columns=[target]).head()
+            signature = infer_signature(example, pipeline.predict(example))
             info = mlflow.sklearn.log_model(
                 pipeline,
                 name=run_name,
                 signature=signature,
-                input_example=X_example,
+                input_example=example,
                 registered_model_name=self.registered_model,
             )
             return LoggedRun(run_id=run.info.run_id, model_version=info.registered_model_version)
 
-    def _candidate_from_version(self, client, mv) -> Candidate:
-        run = client.get_run(mv.run_id)
+    def _candidate_from_version(self, client, model_version) -> Candidate:
+        run = client.get_run(model_version.run_id)
         return Candidate(
-            version=mv.version,
+            version=model_version.version,
             model_type=run.data.tags.get("model_type", "unknown"),
             metrics=run.data.metrics,
-            run_id=mv.run_id,
+            run_id=model_version.run_id,
         )
 
     def load_champion(self) -> Candidate | None:
 
         client = self._client()
         try:
-            mv = client.get_model_version_by_alias(self.registered_model, self.champion_alias)
+            champion = client.get_model_version_by_alias(self.registered_model, self.champion_alias)
         except MlflowException:
             return None
-        return self._candidate_from_version(client, mv)
+        return self._candidate_from_version(client, champion)
 
     def set_champion(self, version: str) -> None:
         self._client().set_registered_model_alias(self.registered_model, self.champion_alias, version)
