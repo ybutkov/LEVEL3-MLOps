@@ -6,14 +6,15 @@ metrics comparable. When train_frac + val_frac == 1 there is no test set: val ru
 to the end and the test split is empty.
 """
 
-import dagster as dg
 import numpy as np
 import pandas as pd
 
 from bike_rental.defs.assets.ml.recipes.recipe_config import RecipeConfig
 
 
-class DatasetSplitter():
+class DatasetSplitter:
+    """Chronological train/val/test splitter driven by the ``split`` recipe."""
+
     def __init__(self, recipe_config: RecipeConfig):
         self.recipe_config = recipe_config
 
@@ -47,7 +48,7 @@ class DatasetSplitter():
     def split_frames(
         self, df: pd.DataFrame, time_feature: str
     ) -> tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]:
-
+        """Split ``df`` chronologically on ``time_feature`` at the recipe fractions."""
         ds = df.sort_values(time_feature).reset_index(drop=True)
         timestamps = np.sort(ds[time_feature].unique())
         cut1, cut2 = self._cut_points(timestamps)

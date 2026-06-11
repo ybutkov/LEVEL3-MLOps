@@ -1,3 +1,5 @@
+"""The single shared feature table asset all models train on."""
+
 import dagster as dg
 import pandas as pd
 
@@ -10,7 +12,7 @@ from bike_rental.defs.assets.ml.recipes.schema import DatasetConfig
 def feature_rentals_hourly(
     hourly_total: pd.DataFrame, recipe_config: RecipeConfig
 ) -> dg.MaterializeResult:
-    """The single feature table all models train on.
+    """Build the single feature table all models train on.
 
     Applies the shared ``dataset`` recipe (the ``select`` step) to ``hourly_total``
     — picking the safe feature columns and dropping the leakage ones. Per-model

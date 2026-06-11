@@ -20,17 +20,17 @@ from bike_rental.defs.assets.data.raw import (
 from bike_rental.defs.assets.data.rentals import hourly_rentals, rentals_split
 from bike_rental.defs.assets.data.weather import clean_weather, weather_split
 from bike_rental.defs.assets.ml.base_dataset import hourly_by_location, hourly_total
+from bike_rental.defs.assets.ml.datasets.data_commit import data_commit
 from bike_rental.defs.assets.ml.datasets.feature_rentals import feature_rentals_hourly
 from bike_rental.defs.assets.ml.datasets.split_datasets import feature_rentals_hourly_splits
-from bike_rental.defs.assets.ml.datasets.data_commit import data_commit
 from bike_rental.defs.assets.ml.models.hourly_models import hgb_hourly, linear_hourly, rf_hourly
 from bike_rental.defs.assets.ml.models.promotion import champion
+from bike_rental.defs.assets.ml.recipes.recipe_config import RecipeConfig
 from bike_rental.defs.io_managers.csv_io import CSVIOManager
-from bike_rental.defs.resources.source import LakeFSSourceResource
-from bike_rental.defs.resources.lakefs import LakeFSVersioningResource
 from bike_rental.defs.resources.experiment import ExperimentConfig
 from bike_rental.defs.resources.experiment_tracker import MlflowExperimentTracker
-from bike_rental.defs.assets.ml.recipes.recipe_config import RecipeConfig
+from bike_rental.defs.resources.lakefs import LakeFSVersioningResource
+from bike_rental.defs.resources.source import LakeFSSourceResource
 
 
 @definitions

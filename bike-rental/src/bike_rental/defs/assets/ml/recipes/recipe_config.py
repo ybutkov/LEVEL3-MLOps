@@ -1,12 +1,14 @@
+"""Recipe configuration resource: loads named preprocessing recipes from YAML."""
+
 from __future__ import annotations
+
 from functools import cached_property
 from pathlib import Path
 
-import yaml
 import dagster as dg
+import yaml
 
 from bike_rental.config import CONFIG_DIR
-
 
 _FALLBACK_RECIPES: dict[str, dict] = {
     "dataset": {
@@ -41,6 +43,8 @@ class RecipeConfigError(Exception):
         """A recipe file is present but structurally invalid."""
 
 class RecipeConfig(dg.ConfigurableResource):
+    """Load named recipes from ``recipes.yaml`` (or a built-in fallback)."""
+
     config_recipe_dir: str = str(CONFIG_DIR)
     config_recipe_file: str = "recipes.yaml"
 
@@ -57,7 +61,7 @@ class RecipeConfig(dg.ConfigurableResource):
             ) from e
 
     def get_recipe(self, name: str) -> dict:
+        """Return the recipe dict for ``name``, or raise if it isn't defined."""
         if name not in self._recipes:
             raise RecipeConfigError(f"recipe '{name}' not found in {self.config_recipe_file}")
         return self._recipes.get(name) or {}
-    

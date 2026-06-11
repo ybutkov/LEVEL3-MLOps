@@ -13,13 +13,13 @@ difference between models (the hyperparameter schema shown in the Launchpad).
 import dagster as dg
 import pandas as pd
 
+from bike_rental.defs.assets.ml.models.catalog import build_estimator, recipe_name_for
+from bike_rental.defs.assets.ml.models.training import train_and_evaluate
 from bike_rental.defs.assets.ml.recipes.recipe_config import RecipeConfig
 from bike_rental.defs.assets.ml.recipes.schema import DatasetConfig
-from bike_rental.defs.assets.ml.models.training import train_and_evaluate
-from bike_rental.defs.assets.ml.models.catalog import build_estimator, recipe_name_for
+from bike_rental.defs.assets.ml.registry import Candidate
 from bike_rental.defs.resources.experiment import ExperimentConfig
 from bike_rental.defs.resources.experiment_tracker import ExperimentTracker
-from bike_rental.defs.assets.ml.registry import Candidate
 from bike_rental.defs.utils.git_operations import get_git_commit
 
 

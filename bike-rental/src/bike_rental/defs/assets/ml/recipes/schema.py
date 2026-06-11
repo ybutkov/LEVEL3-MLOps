@@ -1,6 +1,8 @@
+"""Pydantic schema for preprocessing recipes (an ordered list of steps + target)."""
+
 from __future__ import annotations
 
-from pydantic import BaseModel, Field, model_validator, ValidationError
+from pydantic import BaseModel, Field, ValidationError, model_validator
 
 from bike_rental.defs.assets.ml.recipes.recipe_config import RecipeConfigError
 
@@ -13,6 +15,7 @@ _REQUIRED_FIELD = {
 
 
 class DatasetStep(BaseModel):
+    """One preprocessing step: a ``kind`` plus its required field (columns/periods)."""
 
     kind: str
     periods: dict[str, int] | None = None
@@ -30,6 +33,7 @@ class DatasetStep(BaseModel):
 
 
 class DatasetConfig(BaseModel):
+    """A recipe: the target column plus an ordered list of steps (may be empty)."""
 
     # TODO target list ?
     target: str = Field("total_rentals", min_length=1)
@@ -38,6 +42,7 @@ class DatasetConfig(BaseModel):
 
     @classmethod
     def from_recipe(cls, recipe_config, name: str) -> DatasetConfig:
+        """Build a config from the named recipe; re-raise validation errors with context."""
         recipe = recipe_config.get_recipe(name)
         try:
             return cls(**recipe)

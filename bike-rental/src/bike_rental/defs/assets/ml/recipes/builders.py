@@ -1,11 +1,13 @@
+"""Build the dataset (select step) and the preprocessor (transform steps) from a recipe."""
+
 import dagster as dg
 import pandas as pd
 from sklearn.compose import ColumnTransformer
 from sklearn.preprocessing import OneHotEncoder, StandardScaler
 
-from bike_rental.defs.assets.ml.recipes.transformers import CyclicEncoder
-from bike_rental.defs.assets.ml.recipes.schema import DatasetConfig, DatasetStep
 from bike_rental.defs.assets.ml.guards import assert_no_target_leak
+from bike_rental.defs.assets.ml.recipes.schema import DatasetConfig, DatasetStep
+from bike_rental.defs.assets.ml.recipes.transformers import CyclicEncoder
 
 TIME_KEY = "datetime_hourly"
 
@@ -67,7 +69,8 @@ def restrict_to_features(config: DatasetConfig, features) -> DatasetConfig:
     new_steps: list[DatasetStep] = []
     for step in config.steps:
         if step.kind == "select":
-            new_steps.append(DatasetStep(kind="select", columns=[c for c in step.columns if c in keep]))
+            cols = [c for c in step.columns if c in keep]
+            new_steps.append(DatasetStep(kind="select", columns=cols))
         elif step.kind == "cyclic":
             periods = {k: v for k, v in step.periods.items() if k in active}
             if periods:

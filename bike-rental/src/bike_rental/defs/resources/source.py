@@ -66,8 +66,10 @@ class LakeFSSourceResource(SourceResource):
     secret_key: str
 
     def load_csv(self, filename: str) -> pd.DataFrame:
-        
-        lake_fs = LakeFSFileSystem(host=self.host, username=self.access_key, password=self.secret_key)
+        """Read the named raw CSV from LakeFS at ``ref`` via lakefs-spec."""
+        lake_fs = LakeFSFileSystem(
+            host=self.host, username=self.access_key, password=self.secret_key
+        )
         path = f"{self.repo}/{self.ref}/{self.raw_prefix}/{filename}"
         log = dg.get_dagster_logger()
 

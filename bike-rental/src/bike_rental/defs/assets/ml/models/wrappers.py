@@ -31,9 +31,11 @@ class NonNegativeRegressor(BaseEstimator, RegressorMixin, MetaEstimatorMixin):
         self.estimator = estimator
 
     def fit(self, X, y, **fit_params):
+        """Fit a clone of the wrapped estimator (the passed instance stays untouched)."""
         self.estimator_ = clone(self.estimator)
         self.estimator_.fit(X, y, **fit_params)
         return self
 
     def predict(self, X):
+        """Predict with the fitted estimator, clipped at zero."""
         return np.clip(self.estimator_.predict(X), 0, None)

@@ -1,3 +1,5 @@
+"""Train one model on its recipe pipeline and score it on the validation split."""
+
 from dataclasses import dataclass
 
 import dagster as dg
@@ -7,14 +9,14 @@ from sklearn.base import BaseEstimator
 from sklearn.metrics import mean_absolute_error, mean_squared_error, r2_score
 from sklearn.pipeline import Pipeline
 
-from bike_rental.defs.assets.ml.recipes.schema import DatasetConfig
+from bike_rental.defs.assets.ml.guards import assert_no_target_leak
+from bike_rental.defs.assets.ml.models.wrappers import NonNegativeRegressor
 from bike_rental.defs.assets.ml.recipes.builders import (
     assert_recipe_columns,
     build_preprocessor,
     restrict_to_features,
 )
-from bike_rental.defs.assets.ml.models.wrappers import NonNegativeRegressor
-from bike_rental.defs.assets.ml.guards import assert_no_target_leak
+from bike_rental.defs.assets.ml.recipes.schema import DatasetConfig
 
 TIME_KEY = "datetime_hourly"
 
@@ -29,6 +31,7 @@ class TrainingResult:
     features: list[str]
 
 def regression_metrics(y_true, y_pred) -> dict[str, float]:
+    """Regression metrics for predictions: mae, rmse, r2, and the rmse/mae ratio."""
     rmse = float(np.sqrt(mean_squared_error(y_true, y_pred)))
     mae = float(mean_absolute_error(y_true, y_pred))
     r2 = float(r2_score(y_true, y_pred))
@@ -47,7 +50,12 @@ def train_and_evaluate(
     estimator: BaseEstimator,
     features: list[str],
 ) -> TrainingResult:
+    """Fit the recipe pipeline on ``train_df`` and score it on ``val_df``.
 
+    Restricts ``features`` to those present (minus target/time), guards against
+    target leakage, builds the preprocessing-plus-estimator pipeline, fits it,
+    and returns the fitted pipeline with its validation metrics.
+    """
     target = dataset_config.target
 
     # dataset is full feature table; keep only requested features
@@ -59,7 +67,10 @@ def train_and_evaluate(
     assert_no_target_leak(features, target)
     assert_recipe_columns(dataset_config, train_df.columns)
 
-    pipe = Pipeline([("pre", build_preprocessor(dataset_config)), ("model", NonNegativeRegressor(estimator))])
+    pipe = Pipeline([
+        ("pre", build_preprocessor(dataset_config)),
+        ("model", NonNegativeRegressor(estimator)),
+    ])
     pipe.fit(train_df[features], train_df[target])
     val_pred = pipe.predict(val_df[features])
 

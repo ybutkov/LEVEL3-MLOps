@@ -25,6 +25,7 @@ PRUNE_PREFIX = "datasets/"
 
 
 def main() -> None:
+    """Delete the stale prototype prefix from the trunk and commit the removal."""
     load_dotenv()  # read LAKEFS_* from .env (same file Dagster auto-loads)
     cfg = AppConfig.load()
     client = Client(

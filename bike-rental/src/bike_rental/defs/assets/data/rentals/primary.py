@@ -3,7 +3,7 @@
 import dagster as dg
 import pandas as pd
 
-LAUNCH_DATE = pd.Timestamp("2011-01-01")  # start of observations → origin for the service-growth trend
+LAUNCH_DATE = pd.Timestamp("2011-01-01")  # observation origin for the growth trend
 
 
 @dg.asset(group_name="primary", kinds={"pandas"})

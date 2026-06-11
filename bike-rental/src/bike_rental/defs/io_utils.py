@@ -3,8 +3,8 @@
 from pathlib import Path
 
 import dagster as dg
-import pandas as pd
 import joblib
+import pandas as pd
 from pandas.errors import EmptyDataError, ParserError
 
 

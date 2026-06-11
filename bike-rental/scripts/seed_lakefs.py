@@ -33,6 +33,7 @@ FILES = {
 
 
 def main() -> None:
+    """Seed local raw CSVs into LakeFS through the validated ingest branch."""
     load_dotenv()
     cfg = AppConfig.load()
     client = Client(

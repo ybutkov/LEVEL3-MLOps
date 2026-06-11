@@ -22,7 +22,11 @@ def _raw_asset(asset_name: str, filename: str):
     return _asset
 
 
-registered_rentals_raw = _raw_asset(asset_name="registered_rentals_raw", filename="registered_bike_rentals.csv")
-direct_pickups_raw = _raw_asset(asset_name="direct_pickups_raw", filename="direct_pickup_bike_rentals.csv")
+registered_rentals_raw = _raw_asset(
+    asset_name="registered_rentals_raw", filename="registered_bike_rentals.csv"
+)
+direct_pickups_raw = _raw_asset(
+    asset_name="direct_pickups_raw", filename="direct_pickup_bike_rentals.csv"
+)
 weather_raw = _raw_asset(asset_name="weather_raw", filename="weather.csv")
 holidays_raw = _raw_asset(asset_name="holidays_raw", filename="holidays.csv")

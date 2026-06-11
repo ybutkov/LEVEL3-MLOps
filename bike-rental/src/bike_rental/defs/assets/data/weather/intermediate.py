@@ -81,7 +81,9 @@ def weather_split(weather_raw: pd.DataFrame):
     perceived_gap = (typed["perceived_temperature_c"] - typed["temperature_c"]).abs()
     perceived_bad = int((perceived_gap > PERCEIVED_TEMP_MAX_GAP_C).sum())
     if perceived_bad:
-        log.warning("Perceived temperature decoupled from actual in %d rows — interpolating", perceived_bad)
+        log.warning(
+            "Perceived temperature decoupled from actual in %d rows — interpolating", perceived_bad
+        )
 
     typed.loc[perceived_gap > PERCEIVED_TEMP_MAX_GAP_C, "perceived_temperature_c"] = np.nan
     typed["perceived_temperature_c"] = typed["perceived_temperature_c"].interpolate("linear")
