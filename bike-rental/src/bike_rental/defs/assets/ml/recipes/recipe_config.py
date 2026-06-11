@@ -9,15 +9,19 @@ from bike_rental.config import CONFIG_DIR
 
 
 _FALLBACK_RECIPES: dict[str, dict] = {
-    "linear": {
+    "dataset": {
         "target": "total_rentals",
         "steps": [
             {"kind": "select", "columns": [
-                "datetime_hourly", "hour_of_day", "month", "day_of_week",
-                "conditions", "temperature_c", "perceived_temperature_c",
-                "humidity", "windspeed_kmh", "days_since_launch",
-                "is_weekend", "is_holiday", "total_rentals",
+                "datetime_hourly", "hour_of_day", "month", "day_of_week", "is_weekend",
+                "is_holiday", "conditions", "temperature_c", "perceived_temperature_c",
+                "humidity", "windspeed_kmh", "days_since_launch", "total_rentals",
             ]},
+        ],
+    },
+    "linear": {
+        "target": "total_rentals",
+        "steps": [
             {"kind": "cyclic", "periods": {"hour_of_day": 24, "month": 12, "day_of_week": 7}},
             {"kind": "scale", "columns": [
                 "conditions", "temperature_c", "perceived_temperature_c",
@@ -27,13 +31,7 @@ _FALLBACK_RECIPES: dict[str, dict] = {
     },
     "tree": {
         "target": "total_rentals",
-        "steps": [
-            {"kind": "select", "columns": [
-                "datetime_hourly", "month", "hour_of_day", "day_of_week", "is_weekend",
-                "is_holiday", "conditions", "temperature_c", "perceived_temperature_c",
-                "humidity", "windspeed_kmh", "days_since_launch", "total_rentals",
-            ]},
-        ],
+        "steps": [],
     },
 }
 

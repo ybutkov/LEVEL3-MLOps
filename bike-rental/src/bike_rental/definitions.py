@@ -20,9 +20,8 @@ from bike_rental.defs.assets.data.raw import (
 from bike_rental.defs.assets.data.rentals import hourly_rentals, rentals_split
 from bike_rental.defs.assets.data.weather import clean_weather, weather_split
 from bike_rental.defs.assets.ml.base_dataset import hourly_by_location, hourly_total
-from bike_rental.defs.assets.ml.datasets.linear_hourly import linear_dataset_hourly
-from bike_rental.defs.assets.ml.datasets.tree_hourly import tree_dataset_hourly
-from bike_rental.defs.assets.ml.datasets.split_datasets import linear_dataset_splits, tree_dataset_splits
+from bike_rental.defs.assets.ml.datasets.feature_rentals import feature_rentals_hourly
+from bike_rental.defs.assets.ml.datasets.split_datasets import feature_rentals_hourly_splits
 from bike_rental.defs.assets.ml.datasets.data_commit import data_commit
 from bike_rental.defs.assets.ml.models.hourly_models import hgb_hourly, linear_hourly, rf_hourly
 from bike_rental.defs.assets.ml.models.promotion import champion
@@ -57,10 +56,8 @@ def defs() -> Definitions:
             clean_weather,
             hourly_by_location,
             hourly_total,
-            linear_dataset_hourly,
-            tree_dataset_hourly,
-            linear_dataset_splits,
-            tree_dataset_splits,
+            feature_rentals_hourly,
+            feature_rentals_hourly_splits,
             data_commit,
             linear_hourly,
             rf_hourly,

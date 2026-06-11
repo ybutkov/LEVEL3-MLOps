@@ -18,21 +18,15 @@ from bike_rental.defs.utils.git_operations import get_git_commit
 def data_commit(
     context: dg.AssetExecutionContext,
     lakefs: LakeFSVersioningResource,
-    linear_dataset_hourly_train: pd.DataFrame,
-    linear_dataset_hourly_val: pd.DataFrame,
-    linear_dataset_hourly_test: pd.DataFrame,
-    tree_dataset_hourly_train: pd.DataFrame,
-    tree_dataset_hourly_val: pd.DataFrame,
-    tree_dataset_hourly_test: pd.DataFrame,
+    feature_rentals_hourly_train: pd.DataFrame,
+    feature_rentals_hourly_val: pd.DataFrame,
+    feature_rentals_hourly_test: pd.DataFrame,
 ) -> str:
-    """Publish the run's six splits to LakeFS; return the snapshot commit id."""
+    """Publish the run's three splits to LakeFS; return the snapshot commit id."""
     frames = {
-        "datasets/hourly/linear/train.csv": linear_dataset_hourly_train,
-        "datasets/hourly/linear/val.csv": linear_dataset_hourly_val,
-        "datasets/hourly/linear/test.csv": linear_dataset_hourly_test,
-        "datasets/hourly/tree/train.csv": tree_dataset_hourly_train,
-        "datasets/hourly/tree/val.csv": tree_dataset_hourly_val,
-        "datasets/hourly/tree/test.csv": tree_dataset_hourly_test,
+        "datasets/rentals/hourly/train.csv": feature_rentals_hourly_train,
+        "datasets/rentals/hourly/val.csv": feature_rentals_hourly_val,
+        "datasets/rentals/hourly/test.csv": feature_rentals_hourly_test,
     }
     files = {path: df.to_csv(index=False).encode() for path, df in frames.items()}
 

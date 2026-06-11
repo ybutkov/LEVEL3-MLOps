@@ -7,11 +7,17 @@ from bike_rental.defs.assets.ml.recipes.schema import DatasetConfig
 
 
 @dg.asset(group_name="model_datasets", io_manager_key="csv_io", kinds={"pandas"})
-def linear_dataset_hourly(
+def feature_rentals_hourly(
     hourly_total: pd.DataFrame, recipe_config: RecipeConfig
 ) -> dg.MaterializeResult:
+    """The single feature table all models train on.
 
-    dataset_config = DatasetConfig.from_recipe(recipe_config, "linear")
+    Applies the shared ``dataset`` recipe (the ``select`` step) to ``hourly_total``
+    — picking the safe feature columns and dropping the leakage ones. Per-model
+    representation (cyclic/scale for linear, raw for trees) is NOT baked here; it
+    lives in each model's training Pipeline, so one stored dataset serves all.
+    """
+    dataset_config = DatasetConfig.from_recipe(recipe_config, "dataset")
     df = build_dataset(hourly_total, dataset_config)
 
     columns = [c for c in df.columns if c != "datetime_hourly"]

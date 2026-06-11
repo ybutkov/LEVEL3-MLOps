@@ -2,48 +2,41 @@ split:
   train_frac: 0.70
   val_frac: 0.15
 
+# Shared feature table: WHICH columns enter the dataset (+ leak-guard: drops
+# registered_rentals/direct_pickups whose sum is the target). One dataset, all
+# models train on it; per-model representation lives in the recipes below.
+dataset:
+  target: total_rentals
+  steps:
+    - kind: select
+      columns: [datetime_hourly,
+                hour_of_day,
+                month,
+                day_of_week,
+                is_weekend,
+                is_holiday,
+                conditions,
+                temperature_c,
+                perceived_temperature_c,
+                humidity,
+                windspeed_kmh,
+                days_since_launch,
+                total_rentals]
+
+# Per-model transforms
 linear:
   target: total_rentals
   steps:
-    - kind: select
-      columns: [datetime_hourly,
-                hour_of_day,
-                month,
-                day_of_week,
-                is_weekend,
-                is_holiday,
-                conditions,
-                temperature_c,
-                perceived_temperature_c,
-                humidity,
-                windspeed_kmh,
-                days_since_launch,
-                total_rentals]
     - kind: cyclic
       periods: {hour_of_day: 24, month: 12, day_of_week: 7}
     - kind: scale
-      columns: [
-                conditions,
-                temperature_c,
-                perceived_temperature_c,
-                humidity,
-                windspeed_kmh, 
-                days_since_launch,
-                ]
-tree:
-  target: total_rentals
-  steps:
-    - kind: select
-      columns: [datetime_hourly,
-                hour_of_day,
-                month,
-                day_of_week,
-                is_weekend,
-                is_holiday,
-                conditions,
+      columns: [conditions,
                 temperature_c,
                 perceived_temperature_c,
                 humidity,
                 windspeed_kmh,
-                days_since_launch,
-                total_rentals]
+                days_since_launch]
+
+tree:
+  target: total_rentals
+  steps: []

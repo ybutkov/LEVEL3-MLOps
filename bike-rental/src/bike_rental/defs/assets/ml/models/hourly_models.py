@@ -95,7 +95,7 @@ def _model_asset(*, model_type: str, config_cls: type[dg.Config], train_asset: s
             train_df=train_df[trainingResult.features + [dataset_config.target]],
             target=dataset_config.target,
             data_source=data_commit,
-            dataset_name=f"{recipe_name_for(model_type)}_hourly_train",
+            dataset_name="feature_rentals_hourly_train",
             tags={"model_type": model_type,
                   "recipe": recipe_name_for(model_type),
                   "dagster_run_id": context.run_id,
@@ -126,13 +126,13 @@ def _model_asset(*, model_type: str, config_cls: type[dg.Config], train_asset: s
 
 linear_hourly = _model_asset(
     model_type="linear", config_cls=LinearModelConfig,
-    train_asset="linear_dataset_hourly_train", val_asset="linear_dataset_hourly_val",
+    train_asset="feature_rentals_hourly_train", val_asset="feature_rentals_hourly_val",
 )
 rf_hourly = _model_asset(
     model_type="rf", config_cls=RandomForestConfig,
-    train_asset="tree_dataset_hourly_train", val_asset="tree_dataset_hourly_val",
+    train_asset="feature_rentals_hourly_train", val_asset="feature_rentals_hourly_val",
 )
 hgb_hourly = _model_asset(
     model_type="hgb", config_cls=HGBModelConfig,
-    train_asset="tree_dataset_hourly_train", val_asset="tree_dataset_hourly_val",
+    train_asset="feature_rentals_hourly_train", val_asset="feature_rentals_hourly_val",
 )
