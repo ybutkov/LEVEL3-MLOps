@@ -4,7 +4,7 @@ from sklearn.compose import ColumnTransformer
 from sklearn.preprocessing import OneHotEncoder, StandardScaler
 
 from bike_rental.defs.assets.ml.recipes.transformers import CyclicEncoder
-from bike_rental.defs.assets.ml.recipes.schema import DatasetConfig
+from bike_rental.defs.assets.ml.recipes.schema import DatasetConfig, DatasetStep
 from bike_rental.defs.assets.ml.guards import assert_no_target_leak
 
 TIME_KEY = "datetime_hourly"
@@ -40,6 +40,43 @@ def assert_recipe_columns(config: DatasetConfig, columns) -> None:
     """Fail if target or any preprocessor-input column is absent from `columns`."""
     needed = preprocessor_input_columns(config) | {config.target}
     _assert_columns_present(needed, columns, "Recipe references")
+
+
+def restrict_to_features(config: DatasetConfig, features) -> DatasetConfig:
+    """Restrict a recipe config to ``features`` (target and time are always kept).
+
+    The ``select`` step is intersected with ``features ∪ {target, time}``;
+    preprocessor steps (cyclic/scale/one_hot) are intersected with ``features``;
+    steps left with no columns are dropped. Lets a run train on a subset of
+    features without editing the recipe.
+
+    Parameters
+    ----------
+    config : DatasetConfig
+        Recipe config to restrict.
+    features : Iterable[str]
+        Active feature columns to keep.
+
+    Returns
+    -------
+    DatasetConfig
+        A new config referencing only the active columns.
+    """
+    active = set(features)
+    keep = active | {config.target, TIME_KEY}
+    new_steps: list[DatasetStep] = []
+    for step in config.steps:
+        if step.kind == "select":
+            new_steps.append(DatasetStep(kind="select", columns=[c for c in step.columns if c in keep]))
+        elif step.kind == "cyclic":
+            periods = {k: v for k, v in step.periods.items() if k in active}
+            if periods:
+                new_steps.append(DatasetStep(kind="cyclic", periods=periods))
+        else:  # scale / one_hot
+            cols = [c for c in step.columns if c in active]
+            if cols:
+                new_steps.append(DatasetStep(kind=step.kind, columns=cols))
+    return DatasetConfig(target=config.target, steps=new_steps)
 
 
 def build_dataset(df: pd.DataFrame, config: DatasetConfig) -> pd.DataFrame:

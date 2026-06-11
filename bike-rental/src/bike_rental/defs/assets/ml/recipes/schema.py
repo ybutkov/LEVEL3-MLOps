@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import dagster as dg
 from pydantic import BaseModel, Field, model_validator, ValidationError
 
 from bike_rental.defs.assets.ml.recipes.recipe_config import RecipeConfigError
@@ -34,7 +33,8 @@ class DatasetConfig(BaseModel):
 
     # TODO target list ?
     target: str = Field("total_rentals", min_length=1)
-    steps: list[DatasetStep] = Field(min_length=1)
+    # empty = identity (e.g. the tree recipe: raw features, no transforms)
+    steps: list[DatasetStep] = Field(default_factory=list)
 
     @classmethod
     def from_recipe(cls, recipe_config, name: str) -> DatasetConfig:

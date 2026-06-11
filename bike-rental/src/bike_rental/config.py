@@ -29,7 +29,25 @@ class Layout(BaseModel):
     source: str
     processed: str
     quarantine: str
-    models: str
+
+
+class MlflowSettings(BaseModel):
+    """MLflow tracking/registry settings; ``tracking_uri`` is stand-specific."""
+
+    tracking_uri: str
+    experiment_name: str
+    registered_model: str
+
+
+class LakeFSSettings(BaseModel):
+    """LakeFS source settings (non-secret); credentials come from env vars."""
+
+    host: str
+    repo: str
+    read_ref: str = "main"
+    merge_into: str = "main"
+    raw_prefix: str = "raw"
+    ingest_branch: str = "ingest"
 
 
 class AppConfig(BaseModel):
@@ -43,6 +61,8 @@ class AppConfig(BaseModel):
     data_root: str
     dagster_dir: str
     layout: Layout
+    mlflow: MlflowSettings
+    lakefs: LakeFSSettings
 
     @classmethod
     def load(cls) -> Self:
@@ -87,11 +107,6 @@ class AppConfig(BaseModel):
     def quarantine_dir(self) -> str:
         """Absolute path to the quarantine output directory."""
         return self._path(self.data_root, self.layout.quarantine)
-
-    @property
-    def models_dir(self) -> str:
-        """Absolute path to the models directory."""
-        return self._path(self.data_root, self.layout.models)
 
     @property
     def dagster_storage_dir(self) -> str:

@@ -10,25 +10,12 @@ TIME_KEY = "datetime_hourly"
 @dg.multi_asset(
     group_name="dataset_splits",
     outs={
-        "linear_dataset_hourly_train": dg.AssetOut(io_manager_key="csv_io"),
-        "linear_dataset_hourly_val":   dg.AssetOut(io_manager_key="csv_io"),
-        "linear_dataset_hourly_test":  dg.AssetOut(io_manager_key="csv_io"),
+        "feature_rentals_hourly_train": dg.AssetOut(io_manager_key="csv_io"),
+        "feature_rentals_hourly_val":   dg.AssetOut(io_manager_key="csv_io"),
+        "feature_rentals_hourly_test":  dg.AssetOut(io_manager_key="csv_io"),
     },
 )
-def linear_dataset_splits(linear_dataset_hourly: pd.DataFrame, recipe_config: RecipeConfig):
+def feature_rentals_hourly_splits(feature_rentals_hourly: pd.DataFrame, recipe_config: RecipeConfig):
     splitter = DatasetSplitter(recipe_config)
-    train, val, test = splitter.split_frames(linear_dataset_hourly, TIME_KEY)
-    return train, val, test
-
-@dg.multi_asset(
-    group_name="dataset_splits",
-    outs={
-        "tree_dataset_hourly_train": dg.AssetOut(io_manager_key="csv_io"),
-        "tree_dataset_hourly_val":   dg.AssetOut(io_manager_key="csv_io"),
-        "tree_dataset_hourly_test":  dg.AssetOut(io_manager_key="csv_io"),
-    },
-)
-def tree_dataset_splits(tree_dataset_hourly: pd.DataFrame, recipe_config: RecipeConfig):
-    splitter = DatasetSplitter(recipe_config)
-    train, val, test = splitter.split_frames(tree_dataset_hourly, TIME_KEY)
+    train, val, test = splitter.split_frames(feature_rentals_hourly, TIME_KEY)
     return train, val, test

@@ -11,6 +11,11 @@ dependencies = [
     "pyyaml>=6.0",
     "scikit-learn>=1.5",
     "joblib>=1.4",
+    "mlflow>=3.13.0",
+    "lakefs-spec>=0.14.0",
+    "fastapi>=0.136.3",
+    "uvicorn>=0.42.0",
+    "httpx>=0.28.1",
 ]
 
 [dependency-groups]
