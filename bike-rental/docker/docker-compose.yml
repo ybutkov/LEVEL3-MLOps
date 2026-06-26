@@ -9,7 +9,7 @@ services:
       POSTGRES_PASSWORD: postgres
       POSTGRES_DB: postgres
     volumes:
-      - pgdata_final:/var/lib/postgresql/data
+      - ./pgdata_final:/var/lib/postgresql/data
     healthcheck:
       test: ["CMD", "pg_isready", "-U", "postgres"]
       interval: 10s
@@ -27,7 +27,7 @@ services:
       MINIO_ROOT_PASSWORD: minioadmin
     command: server /data --console-address ":9001"
     volumes:
-      - miniodata_final:/data
+      - ./miniodata_final:/data
 
   minio-setup:
     image: minio/mc:RELEASE.2023-05-18T16-59-00Z
@@ -39,7 +39,7 @@ services:
     entrypoint: ["/bin/sh", "-c"]
     command:
       - |
-        mc mb -p minio/bike-rental minio/mlflow
+        mc mb -p minio/industrial_chall minio/mlflow
         exit 0
 
   lakefs:
@@ -77,13 +77,11 @@ services:
       - MLFLOW_S3_ENDPOINT_URL=http://minio:9000
       - MLFLOW_TRACKING_AUTH_DISABLED=true
       - MLFLOW_AUTH_CONFIG_PATH=""
+    # --artifacts-destination s3://mlflow/  - should we point to destination?
     command: >
       mlflow server 
-      --backend-store-uri postgresql+psycopg2://postgres:postgres@postgres/postgres 
+      --backend-store-uri postgresql+psycopg2://postgres:postgres@postgres/postgres
       --artifacts-destination s3://mlflow/ 
       --host 0.0.0.0 
       --port 5000
       --allowed-hosts '*'
-volumes:
-  pgdata_final:
-  miniodata_final:

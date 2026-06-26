@@ -39,7 +39,9 @@ htmlcov/
 */data/quarantine/
 */data/models/
 
-bike-rental-week3-wip/
-
 # Notebook drafts (pre-submission backups, local only)
 **/notebooks/drafts/
+/_scratch/
+
+mlartifacts/
+mlflow.db

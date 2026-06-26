@@ -2,7 +2,7 @@
 
 An end-to-end MLOps project on a city bike-sharing dataset that predicts **hourly rental
 demand**. It grows across weeks on the same data and the same Dagster pipeline — week 2 builds
-the data-preprocessing pipeline, week 3 adds the models, week 4 adds experiment tracking, data
+the data-preprocessing pipeline,   week 3 adds the models, week 4 adds experiment tracking, data
 versioning, and an HTTP API.
 
 The model answers a simple operational question: given an hour and the weather, roughly how many

@@ -12,6 +12,7 @@ import lakefs
 from lakefs.client import Client
 from lakefs.exceptions import BadRequestException
 
+
 class LakeFSVersioningResource(dg.ConfigurableResource):
     """Commit a batch of files to LakeFS as one versioned snapshot.
 
@@ -60,7 +61,6 @@ class LakeFSVersioningResource(dg.ConfigurableResource):
         str
             The snapshot's commit id (on the trunk after the merge).
         """
-
         # TODO Can create only 1 client in app and inject?
         client = Client(host=self.host, username=self.access_key, password=self.secret_key)
         repo = lakefs.Repository(self.repo, client=client)
@@ -72,7 +72,8 @@ class LakeFSVersioningResource(dg.ConfigurableResource):
             commit_id = work.commit(message=message, metadata=metadata or {}).id
             work.merge_into(self.merge_into)
         except BadRequestException as error:
-            # Check for same commit
+            # identical to trunk (no diff): the data is already published there,
+            # so the current head is the right version to return.
             if "no changes" not in str(error).lower():
                 raise
             commit_id = work.head.id

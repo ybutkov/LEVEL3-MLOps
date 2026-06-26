@@ -16,6 +16,7 @@ dependencies = [
     "fastapi>=0.136.3",
     "uvicorn>=0.42.0",
     "httpx>=0.28.1",
+    "s3fs>=2026.4.0",
 ]
 
 [dependency-groups]

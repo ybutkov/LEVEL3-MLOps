@@ -41,7 +41,7 @@ def main() -> None:
         username=os.environ["LAKEFS_ACCESS_KEY"],
         password=os.environ["LAKEFS_SECRET_KEY"],
     )
-    repo = lakefs.Repository(cfg.lakefs.repo, client=client)
+    repo = lakefs.Repository(os.getenv("LAKEFS_REPO", cfg.lakefs.repo), client=client)
     src_dir = Path(cfg.source_dir)
     prefix = cfg.lakefs.raw_prefix
     ingest = cfg.lakefs.ingest_branch
